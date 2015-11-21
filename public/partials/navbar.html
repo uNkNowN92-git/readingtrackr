@@ -1,0 +1,30 @@
+<nav>
+  <div class="navbar">
+    <div class="container">
+      <div class="navbar-header">
+        <div class="nav navbar-nav">
+          <span ui-sref-active="active">
+            <a ui-sref="home" ng-click="setTitle('Data')">
+              <span class="glyphicon glyphicon-pencil"></span>
+              Data
+            </a>
+          </span>
+          <span ui-sref-active="active">
+            <a ui-sref="summary" ng-click="setTitle('Summary')">
+              <span class="glyphicon glyphicon-th-list"></span>
+              Summary
+            </a>
+          </span>
+          <span ui-sref-active="active">
+            <a ui-sref="settings" ng-click="setTitle('Settings')">
+              <span class="glyphicon glyphicon-cog"></span>
+              Settings
+            </a>
+          </span>
+          <span id="status" ng-class="{'online': dbConnection, 'offline': !dbConnection}"></span>
+          <span ng-bind="$state | json"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>

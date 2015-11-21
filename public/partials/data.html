@@ -1,0 +1,48 @@
+<section id="todoapp" infinite-scroll='loadMore()' infinite-scroll-distance='0.5'>
+  <span class="entry-count" ng-pluralize count="todos.length" when="{1: '{} entry', 'other': '{} entries'}"></span>
+  <header id="header">
+    <form name="newReadingForm" ng-submit="newReadingForm.$valid && addNewDoc()">
+      <input id="new-todo" ng-model="newReading" autocomplete="off" placeholder="What's the latest reading?" type="text" min="0" ng-focus="editingId = null"
+      step="0.1" auto-focus validate-float required>
+    </form>
+  </header>
+  <section id="main">
+    <ul id="todo-list">
+      <form name="editForm" ng-submit="editReading(editingId)">
+        <li ng-repeat="doc in todos | limitTo:limit" ng-class="{'editing': editingId == doc._id, 'animate': editingId != doc._id}">
+          <div class="view">
+            <input class="toggle" type="checkbox">
+            <label hm-doubletap="beginEditing(doc._id, 'reading', $index)" class="reading" ng-bind-template="{{doc.reading | number:1}}"></label>
+            <label hm-doubletap="beginEditing(doc._id, 'dateTime', $index)" class="datetime">
+              <span class="datetime" ng-bind-template="{{doc._id | date:'mediumDate'}}"></span>
+              <span class="datetime" ng-bind-template="{{doc._id | date:'shortTime'}}"></span>
+            </label>
+            <button class="destroy" type="button" ng-click="deleteDoc(doc)"></button>
+          </div>
+            <input class="edit reading" validate-float focus="focusReading[$index]" ng-model="editedReading[$index]">
+            <input class="edit datetime" id="{{doc._id}}" focus="focusDateTime[$index]" ng-model="editedDateTime[$index]">
+            <button class="hidden-submit" type="submit"></button>
+        </li>
+        <li>
+          <div class="view">
+            <label class="load-more" ng-show="limit < todos.length"><img src="/img/ajax-loader.gif" alt="load-icon"> Loading more...</label>
+          </div>
+        </li>
+        <input type="hidden" ng-model="index">
+      </form>
+    </ul>
+    <div class="overlay" ng-show="editingId" hm-doubletap="editingId = null; closeDateTimePicker()"><span>Double-click on this background to cancel edit.</span></div>
+  </section>
+  <footer id="footer">
+    <span id="todo-count"></span>
+    <div id="sync-wrapper">
+      <div id="sync-success">Synced to server</div>
+      <div id="sync-complete">Currently syncing</div>
+      <div id="sync-error">There was a problem syncing</div>
+    </div>
+  </footer>
+</section>
+<div id="logs"></div>
+<footer id="info">
+  <p>Double-click to edit an entry</p>
+</footer>

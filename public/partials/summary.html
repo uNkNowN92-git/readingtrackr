@@ -1,0 +1,118 @@
+<section id="summary-page" class="padded-content" infinite-scroll='loadMore()' infinite-scroll-distance='0.5'>
+  <span ng-bind="getSummary()"></span>
+  <header id="header">
+  </header>
+  <section id="summary">
+    <h2>Summary</h2>
+    <div id="summary-details">
+      <dl class="summary">
+        <dt>Start Reading</dt>
+        <dd>
+            <span ng-class="{'invalid': !startReading}"
+                ng-bind-template="{{startReading | number:1}} kWh"></span>
+            <span class="datetime sm-left" ng-class="{'hidden': !startReading}"
+                ng-bind-template="({{startDateTime | date:'mediumDate'}})"></span>
+        </dd>
+        <dt>Latest Reading</dt>
+        <dd>
+            <span ng-class="{'invalid': !latestReading}"
+            ng-bind-template="{{latestReading | number:1}} kWh"></span>
+            <span class="datetime sm-left" ng-class="{'hidden': !latestReading}"
+                ng-bind-template="({{endDateTime | date:'mediumDate'}})"></span>
+        </dd>
+        <dt>Current Usage</dt>
+        <dd ng-class="{'invalid': !currentUsage}"
+            ng-bind-template="{{currentUsage | number:1}} kWh">
+        </dd>
+        <dt>Elapsed Time</dt>
+        <dd ng-class="{'invalid': !elapsedTime}"
+            ng-bind-html="elapsedTime | humanizeDuration">
+        </dd>
+        <dt>Rate per kWh</dt>
+        <dd ng-class="{'invalid': !electricityRate}"
+            ng-bind-template="{{electricityRate | currency:'P '}}">
+        </dd>
+        <dt>Current Cost</dt>
+        <dd ng-class="{'invalid': !currentCost}"
+            ng-bind-template="{{currentCost | currency:'P '}}">
+        </dd>
+        <dt>Ave Usage per day</dt>
+        <dd ng-class="{'invalid': !aveUsagePerDay}"
+            ng-bind-template="{{aveUsagePerDay | number:1}} kWh">
+        </dd>
+        <dt>Ave Cost per day</dt>
+        <dd ng-class="{'invalid': !aveCostPerDay}"
+            ng-bind-template="{{aveCostPerDay | currency:'P '}}">
+        </dd>
+        <dt>Est. Monthly Usage</dt>
+        <dd ng-class="{'invalid': !aveUsagePerDay}"
+            ng-bind-template="{{aveUsagePerDay * 30 | number:1}} kWh">
+        </dd>
+        <dt>Est. Monthly Cost</dt>
+        <dd ng-class="{'invalid': !aveCostPerDay}"
+            ng-bind-template="{{aveCostPerDay * 30 | currency:'P '}}">
+        </dd>
+      </dl>
+    </div>
+    <button class="button toggle-filters" ng-click="showFilters = !showFilters">
+      <span class="glyphicon glyphicon-search"></span>
+      <span ng-bind-template="{{' ' + (showFilters ? 'Hide' : 'Show') + ' Search Tools'}}"></span>
+    </button>
+    <div class="filters" ng-show="showFilters">
+      <h3>Search</h3>
+      <!--<label for="">Any
+        <input type="text" ng-model="search.$">
+      </label>
+      <label for="">
+        <input type="text" ng-model="search.date">
+      </label>-->
+      <label for="">by Date</label>
+      <input type="text" class="date-input" ng-change="resetLimit()" ng-model="dateFrom" placeholder="From Date (MMM D, YYYY)" datetime-picker>
+      <input type="text" class="date-input" ng-change="resetLimit()" ng-model="dateTo" placeholder="To Date (MMM D, YYYY)" datetime-picker>
+    </div>
+    <span class="entries-count" ng-bind-template="{{'Showing ' + results.length + ' out of ' + docs.length + ' entries'}}"></span>
+    <div id="flip-scroll" class="table-wrap">
+      <table id="table-summary">
+        <thead>
+          <tr>
+            <th ng-show="windowWidth <= 800">Entry No.</th>
+            <th>Reading</th>
+            <th>Date/Time</th>
+            <th>Usage</th>
+            <th>Duration</th>
+            <th>Cost</th>
+            <th>Ave.kWh/hr</th>
+            <th>Ave.Cost/hr</th>
+          </tr>
+        </thead>
+        <tbody when-scroll-ends="loadMoreRecords()" in-view-container>
+          <!--<tr ng-repeat="doc in docs | reverse | limitTo:limit | filter:search as results" class="animate"-->
+          <!--<tr ng-repeat="doc in docs | reverse | limitTo:limit | dateFilter:dateFrom:dateTo as results" class="animate"-->
+          <tr ng-repeat="doc in docs | reverse | dateFilter:dateFrom:dateTo | limitTo:limit as results" class="animate"
+              ng-init="doc.date = (doc._id | date:'mediumDate'); doc.time = (doc._id | date:'shortTime')">
+            <td class="entry-count" ng-show="windowWidth <= 800" ng-bind="$index + 1"></td>
+            <td ng-bind-template="{{doc.reading | number:1}}"></td>
+            <td>
+                <span class="datetime" ng-bind="doc.date"></span>
+                <span class="datetime" ng-bind="doc.time"></span>
+            </td>
+            <td ng-bind-template="{{doc.usage | number:1}}"
+                ></td>
+            <td ng-bind-html="doc.duration | humanizeDuration"></td>
+            <td ng-bind-template="{{doc.cost | currency:'P '}}" class="no-wrap"></td>
+            <td ng-bind-template="{{doc.aveUsagePerHour | number:1}}"></td>
+            <td ng-bind-template="{{doc.aveCostPerHour | currency:'P '}}" class="no-wrap"></td>
+          </tr>
+          <tr ng-hide="limit > docs.length || limit > results.length">
+              <td colspan="8">
+                <span class="load-more" ng-class="{'hidden': windowWidth <= 800}">
+                  <img src="/img/ajax-loader.gif" alt="load-icon"> Loading more...
+                </span>
+                <button class="load-more"  ng-class="{'hidden': windowWidth > 800}" ng-click='loadMore(1)'>Load More</button>
+              </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>

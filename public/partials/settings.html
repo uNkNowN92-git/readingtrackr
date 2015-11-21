@@ -1,0 +1,40 @@
+<section id="settings-page" class="padded-content">
+  <header id="header">
+    <h2>Settings</h2>
+  </header>
+  <section id="settings">
+    <form id="settings-form" name="settingsForm" novalidate ng-submit="settingsForm.$valid && saveSettings()">
+      <div class="txt-fld">
+        <label for="server">Server</label>
+        <input id="server" ng-model="settings.server" name="server" type="text" placeholder="{{serverPlaceholder}}" ng-minlength="5" auto-focus ng-required="settings.database">
+      </div>
+      <div class="txt-fld">
+        <label for="database">Database</label>
+        <input id="database" ng-model="settings.database" name="database" type="text" ng-minlength="4" ng-required="settings.server">
+      </div>
+       <div class="txt-fld">
+        <label for="username">Username</label>
+        <input id="username" ng-model="settings.username" name="username" type="text" ng-minlength="4">
+      </div>
+      <div class="txt-fld">
+        <label for="password">Password</label>
+        <input id="password" ng-model="settings.password" name="password" type="password" ng-minlength="4">
+      </div>
+      <div class="txt-fld">
+        <label for="electricity-rate">Electricity Rate</label>
+        <input id="electricity-rate" ng-model="settings.electricityRate" name="electricity-rate" placeholder="{{defaultElectricityRate}}" type="number" min="0" step="0.1" required>
+      </div>
+      <div class="btn-fld">
+        <span id="result" ng-bind="result"></span>
+        <button class="button" type="submit" ng-click="result = ''">Save</button>
+        <button class="button danger" ng-click="resetSettings(settingsForm)" type="button">Clear</button>
+        <button class="button sync" type="button"
+          ng-show="dbConnection"
+          ng-disabled="(!dbConnection && !settings.enableSync)"
+          ng-bind="!settings.enableSync ? 'Start Sync' : 'Stop Sync'"
+          ng-click="syncDB()">Sync</button>
+      </div>
+      <input type="hidden" ng-model="settings.enableSync">
+    </form>
+  </section>
+</section>
