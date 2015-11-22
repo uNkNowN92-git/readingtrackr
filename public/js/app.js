@@ -723,6 +723,7 @@
 
 
 			$scope.deleteDoc = function (doc) {
+				if(confirm("Are you sure you want to delete this entry?"))
 				data.delete(doc)
 					.catch(function (reason) {
 						console.log(reason);

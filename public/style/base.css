@@ -892,7 +892,7 @@ button.button.button-sm {
   position: relative;
   width: 100%;
 }
-[ui-view].ng-enter, [ui-view].ng-leave {
+/*[ui-view].ng-enter, [ui-view].ng-leave {
   position: absolute;
   left: 0;
   right: 0;
@@ -909,7 +909,7 @@ button.button.button-sm {
 	   -moz-animation:fadeOut 0.5s both linear;
 	        animation:fadeOut 0.5s both linear;   
   z-index: 900;
-}
+}*/
 .home-current [ui-view].ng-enter,
 .summary-current.settings-previous [ui-view].ng-enter
 {

@@ -114,7 +114,7 @@
             <td ng-bind-template="{{doc.aveUsagePerHour | number:1}}"></td>
             <td ng-bind-template="{{doc.aveCostPerHour | currency:'P '}}" class="no-wrap"></td>
           </tr>
-          <tr ng-hide="limit >= docs.length || limit >= results.length || limit >= filteredReadings.length">
+          <tr ng-hide="limit > docs.length || limit > results.length || limit > filteredReadings.length">
               <td colspan="8">
                 <span class="load-more" ng-class="{'hidden': windowWidth <= 800}">
                   <img src="/img/ajax-loader.gif" alt="load-icon"> Loading more...
