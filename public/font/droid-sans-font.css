@@ -34,6 +34,9 @@
 .glyphicon-th-list:before {
     content: "\e012";
 }
+.glyphicon-list-alt:before {
+    content: "\e032";
+}
 .glyphicon-pencil:before {
     content: "\270f";
 }
@@ -42,4 +45,10 @@
 }
 .glyphicon-search:before {
   content: "\e003";
+}
+.glyphicon-download-alt:before {
+  content: "\e025";
+}
+.glyphicon-download:before {
+  content: "\e026";
 }

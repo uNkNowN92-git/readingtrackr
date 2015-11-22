@@ -6,7 +6,7 @@
     <form id="settings-form" name="settingsForm" novalidate ng-submit="settingsForm.$valid && saveSettings()">
       <div class="txt-fld">
         <label for="server">Server</label>
-        <input id="server" ng-model="settings.server" name="server" type="text" placeholder="{{serverPlaceholder}}" ng-minlength="5" auto-focus ng-required="settings.database">
+        <input id="server" ng-model="settings.server" name="server" type="text" placeholder="{{serverPlaceholder}}" ng-minlength="5" ng-required="settings.database">
       </div>
       <div class="txt-fld">
         <label for="database">Database</label>

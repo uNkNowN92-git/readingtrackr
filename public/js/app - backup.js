@@ -1,6 +1,57 @@
-(function(){
-	var app = angular.module('appServices', ['infinite-scroll', 'hmTouchEvents', 'flash', 'ngAnimate', 'ngCookies', 'ngMessages'])
-	
+(function () {
+
+	'use strict';
+
+	var app = angular.module('electricityUsageApp',
+		['ui.router', 'infinite-scroll', 'hmTouchEvents', 'flash', 'ngAnimate', 'ngCookies', 'ngMessages'])
+
+		.config(function ($stateProvider, $urlRouterProvider) {
+			$urlRouterProvider.otherwise('/');
+
+			$stateProvider
+				.state('summary', {
+					url: '/summary',
+					templateUrl: 'partials/summary.html',
+					controller: 'SummaryController',
+					controllerAs: 'summary'
+				})
+				.state('home', {
+					url: '/',
+					templateUrl: 'partials/data.html',
+					controller: 'DataController',
+					controllerAs: 'data'
+				})
+				.state('settings', {
+					url: '/settings',
+					templateUrl: 'partials/settings.html',
+					controller: 'MainController'
+				})
+			;
+		})
+
+		.run(function ($rootScope, $state, $stateParams, $cookies, data) {
+			var id = $cookies.get('guid');
+			if (!id) {
+				$cookies.put('guid', guid());
+			}
+			
+			function guid() {
+				function s4() { return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1); }
+				return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+			}
+			
+			$rootScope.$state = $state;
+    	$rootScope.$stateParams = $stateParams; 
+			
+			$rootScope.$on('$stateChangeSuccess',
+				function(event, toState, toParams, fromState, fromParams) {
+					// $rootScope.$state.current = toState;
+					$rootScope.$state.previous = fromState;
+					// console.log($rootScope.$state.previous);
+				}
+			)
+		})
+
 		.factory('Scopes', function ($rootScope, $cookies) {
 			var mem = {};
 
@@ -38,6 +89,31 @@
 					return $sce.trustAsHtml(el.join(" and "));
 				} else return null;
 			}
+		})
+		
+		.filter("dateFilter", function() {
+			return function(items, from, to) {
+				if (!from && !to) return items;
+				
+				var df = new Date(from) || new Date();
+				var dt = new Date(to) || new Date();
+				var arrayToReturn = [];
+				df = df.getTime();
+				dt = dt.getTime();
+				
+				for (var i=0; i<items.length; i++){
+						var dateTime = parseInt(items[i]._id);
+						
+						if (dateTime >= df)  {
+							if (!dt || (dt && dateTime <= dt))
+								arrayToReturn.push(items[i]);
+						} else if (dateTime <= dt) {
+							if (!df || (df && dateTime >= df))
+								arrayToReturn.push(items[i]);
+						}
+				}
+				return arrayToReturn;
+			};
 		})
 
 		.filter('reverse', function () {
@@ -95,11 +171,11 @@
 						headers: { Authorization: 'Basic ' + window.btoa(user.name + ':' + user.password) }
 					}
 				};
+				// console.log(remoteCouch);
 
 				var remoteDB = new PouchDB(remoteCouch, pouchOpts);
-
 				remoteDB.login(user.name, user.password, ajaxOpts, function (err, response) {
-					console.log('login');
+					// console.log('login');
 					
 					if (err) {
 						var errorMessage;
@@ -112,7 +188,7 @@
 								break;
 						}
 						//alert(String.format("Error! {0}", errorMessage));
-						// if (settings.enableSync)
+						if (settings.enableSync || settings.server && settings.database)
 							Scopes.store('flashMessage', { severity: 'danger',
 								title: String.format('Error {0}!', err.status),
 								message: String.format('{0}<br>{1}', errorMessage, err.message) });
@@ -154,13 +230,12 @@
 				var remoteCouchTemplate = 'http://{0}:{1}@{2}:5984/{3}';
 				var remoteCouch = String.format(remoteCouchTemplate, settings.username, settings.password, settings.server, settings.database);
 
-				console.log("sync", remoteCouch);
+				// console.log("sync", remoteCouch);
 
 				$rootScope.$apply(function () {
 					sync = db.sync(remoteCouch, {
 						live: true,
 						filter: function (doc) {
-							// console.log(doc);
 							return doc.type === 'reading' || doc._deleted;
 						}
 					}).on('paused', function () {
@@ -169,23 +244,31 @@
 							// enableSync: false,
 							dbConnection: dbConnection
 						});
+						Scopes.store('flashMessage', {title: 'Success!', message: 'Database sync successful.', severity: 'success'});
+						
 						console.log('paused');
 					}).on('active', function () {
-						console.log('active')
-						dbConnection = true;
+						console.log('active');
+						Scopes.store('flashMessage', {title: '', message: 'Syncing...', severity: 'info'});
+						
+						// dbConnection = true;
 					}).on('denied', function (info) {
 						console.log('denied', info)
-						dbConnection = false;
+						// dbConnection = false;
 					}).on('complete', function (info) {
 						console.log(info);
 						// enableSync = true;
-						dbConnection = true;
-						Scopes.store('dbStatus', {
-							// enableSync: enableSync,
-							dbConnection: dbConnection
-						});
+						// dbConnection = true;
+						// Scopes.store('dbStatus', {
+						// 	// enableSync: enableSync,
+						// 	dbConnection: dbConnection
+						// });
 					}).on('error', function (err) {
 						dbConnection = false;
+						Scopes.store('dbStatus', {
+							// enableSync: false,
+							dbConnection: dbConnection
+						});
 						console.log("error!", err);
 					});
 				});
@@ -285,6 +368,9 @@
 							login();
 						}
 						break;
+					default:
+						console.log(newDoc.reading);
+						break;
 				}
 			}
 
@@ -299,7 +385,27 @@
 					sync.cancel()
 				},
 				put: function (doc) {
-					return db.put(doc)
+					return db.put(doc, function(err) {
+							// console.log(err)
+							if (err) {
+								var errorMessage;
+								switch (err.name) {
+									case 'conflict':
+										if (doc.type == 'reading') {
+											errorMessage = String.format('An entry with same date and time <span class="no-wrap">({0})</span> already exists.',
+												// new Date(parseInt(doc._id)).format()'M j, Y h:i A');
+												moment(parseInt(doc._id)).format('MMM D, YYYY h:mm A'));
+										} else{
+											errorMessage = 'Entry already exists.';
+										}
+										break;
+									default:
+										errorMessage = 'Entry already exists.';
+										break;
+								}
+								Scopes.store('flashMessage', {title: 'Error!', message: errorMessage, severity: 'danger', pause: true});
+							}
+						})
 						.then(util.resolve)
 						.catch(util.reject);
 				},
@@ -388,13 +494,313 @@
 				}
 			}
 		})
+
+		.controller('MainController', function ($scope, $cookies, db, data, Scopes, flashMessage) {
+
+			var flashDuration = 3500;
+			// $scope.appName = ".";
+			$scope.appName = "reading-trackr";
+			$scope.title = $scope.appName + " App";
+			$scope.flashDuration = flashDuration;
+			$scope.serverPlaceholder = window.location.hostname;
+			$scope.defaultElectricityRate = "Default: P 13.00"
+
+			$scope.setTitle = function (pageTitle) {
+				//console.log(pageTitle);
+				//$scope.title = pageTitle ? pageTitle + " | " + $scope.appName : $scope.appName;
+			}
+			
+			$scope.animateFrom = function() {
+				return $cope.$state.current.name == 'home' ? 'from-right' : 'from-left';
+			}
+			
+			var currentYear = new Date().getFullYear();
+			var copyrightYears = currentYear != 2015 ? 2015 + " - " + currentYear : 2015;
+			$scope.footerText = String.format("© {0} Electricity Reading Trackr App | uNkNowN92", copyrightYears);
+
+			$scope.settings = data.settings;
+			
+			$scope.syncDB = function () {
+				toggleDbSync();
+			}
+
+			function toggleDbSync() {
+				$scope.settings.enableSync = !$scope.settings.enableSync;
+				
+				data.put($scope.settings).then(function (res) {
+					data.get(settings._id).then(function (doc) {
+						$scope.$apply(function () {
+							$.extend(data.settings, doc);
+							$scope.settings = data.settings;
+						});
+						if ($scope.settings.enableSync)
+							Scopes.store('flashMessage', {title: '', message: 'Database sync started.', severity: 'info'});
+						else
+							Scopes.store('flashMessage', {title: '', message: 'Stopping database sync...', severity: 'info'});
+					});
+				}, function (err) { console.log(err); });
+			}
+
+			$scope.$on('scope.stored', function (event, storedData) {
+				$scope.$apply(function () {
+					switch (storedData.key) {
+						case 'dbStatus-' + $cookies.get('guid'):
+							$scope.dbConnection = storedData.value.dbConnection;
+
+							if(!$scope.dbConnection && $scope.settings.enableSync)
+								toggleDbSync();
+
+							break;
+						case 'flashMessage-' + $cookies.get('guid'):
+							flashMessage.create({
+								severity: storedData.value.severity,
+								title: storedData.value.title,
+								message: storedData.value.message
+							});
+							if (storedData.value.pause)
+								flashMessage.pause();
+    			
+							break;
+					}
+				});
+			});
+
+			var settings = {
+				_id: 'settings-' + $cookies.get('guid'),
+				type: 'settings'
+			};
+
+			$scope.saveSettings = function () {
+				var newSettings = settings;
+				$.extend(newSettings, $scope.settings);
+				data.put(newSettings).then(function (res) {
+					data.get(settings._id).then(function (doc) {
+						$scope.$apply(function () {
+							$.extend(data.settings, doc);
+							$scope.settings = data.settings;
+						});
+						Scopes.store('flashMessage', {title: 'Success!', message: 'Settings saved successfully!', severity: 'success'});
+					});
+				}, function (err) { console.log(err); })
+			};
+
+			$scope.resetSettings = function () {
+				data.get(settings._id).then(function (doc) {
+					doc.server = null;
+					doc.database = null;
+					doc.username = null;
+					doc.password = null;
+					doc.electricityRate = null;
+					data.put(doc).then(function () {
+						$scope.$apply(function () {
+							$scope.settings = data.settings;
+							$scope.settingsForm.$setPristine();
+						});
+						Scopes.store('flashMessage', {title: 'Success!', message: 'Settings cleared successfully!', severity: 'success'});
+					})
+				}).catch(function (err) { console.log(err); });
+			}
+
+		})
+
+		.controller('DataController', function ($scope, data, dataService, Scopes, $filter) {
+			$scope.todos = data.docs;
+			$scope.focusReading = [];
+			$scope.focusDateTime = [];
+			$scope.editedReading = [];
+			$scope.editedDateTime = [];
+			$scope.limit = 10;
+
+			$scope.loadMore = function () {
+				if ($scope.limit < $scope.todos.length)
+					$scope.limit += 10;
+			}
+
+			$scope.beginEditing = function (id, element, index) {
+				var index = getIndex($scope.todos, id);
+				var doc = $scope.todos[index];
+				$scope.index = index;
+				$scope.focusReading[index] = element == 'reading';
+				$scope.focusDateTime[index] = element == 'dateTime';
+				$scope.editingId = id;
+				$scope.editedReading[index] = parseFloat(doc.reading).toFixed(1);
+				$scope.editedDateTime[index] = $filter('date')(doc._id, 'mediumDate') + " " + $filter('date')(doc._id, 'shortTime');
+
+				$.datetimepicker.setLocale('en');
+				$('#' + id).datetimepicker({ format: 'M j, Y h:i A', step: 15, value: new Date(parseInt(doc._id)) });
+			};
+
+			$scope.editReading = function (docId) {
+				var index = $scope.index;
+				var updatedDoc = {
+					_id: new Date($scope.editedDateTime[index]).getTime().toString(),
+					reading: parseFloat($scope.editedReading[index]),
+				};
+				updatedDoc._id = removeSeconds(updatedDoc._id);
+
+				data.get(docId).then(function (doc) {
+					if (updatedDoc._id != doc._id) {
+						data.delete(doc).catch(function (reason) { console.log(reason); });
+						var newDoc = {
+							type: 'reading',
+							startReading: $scope.startOfMonth || false
+						};
+						$.extend(newDoc, updatedDoc);
+						data.put(newDoc).then(function (res) { $scope.$apply(); }, function (err) { console.log(err); })
+					} else {
+						$.extend(doc, updatedDoc);
+						data.put(doc).then(function (res) { $scope.$apply(); }, function (err) { console.log(err); })
+					}
+
+				});
+
+				$scope.editedReading[index] = null;
+				$scope.editedDateTime[index] = null;
+				delete $scope.editingId;
+				closeDateTimePicker();
+			}
+			
+			function closeDateTimePicker() {
+				$('.xdsoft_datetimepicker').fadeOut();
+			}
+			
+			$scope.closeDateTimePicker = function() {
+				closeDateTimePicker();
+			}
+
+			$scope.addNewDoc = function () {
+
+				// for (var i = 0; i < 50; i++) {
+				// 	$scope.dateTime = Math.random() * 1447039080000;
+				// console.log("new");				
+				var newDoc = {
+					type: 'reading',
+					_id: removeSeconds($scope.dateTime || new Date().getTime().toString()),
+					reading: parseFloat($scope.newReading).toFixed(1),
+					startReading: $scope.startOfMonth || false,
+				};
+
+				data.put(newDoc).then(function (res) {
+					console.log(res);
+					$scope.$apply(function () {
+						$scope.newReading = '';
+						// console.log("added");
+					})
+				}, function (err) {
+					console.log(err);
+				})
+
+			};
+			// };
+
+
+			$scope.deleteDoc = function (doc) {
+				data.delete(doc)
+					.catch(function (reason) {
+						console.log(reason);
+					});
+			};
+
+			function removeSeconds(dateTime) {
+				dateTime = parseInt(dateTime);
+				dateTime = $filter('date')(dateTime, 'mediumDate') + " " + $filter('date')(dateTime, 'shortTime');
+				return new Date(dateTime).getTime().toString();
+			}
+			
+			$scope.windowWidth = window.innerWidth;
+			$(window).resize(function () {
+				$scope.$apply(function () {
+					$scope.windowWidth = window.innerWidth;
+				});
+			});
+		})
+
+		.controller('SummaryController', function ($scope, data, Scopes, dataService, $filter) {
+			$scope.docs = data.docs;
+			$scope.limit = 10;
+
+			$scope.resetLimit = function() {
+				$scope.limit = 10;
+			}
+
+			$scope.loadMore = function (override) {
+				if ($scope.limit < $scope.docs.length && $scope.windowWidth > 800 || override)
+					$scope.limit += 10;
+			}
+
+			$scope.getSummary = function () {
+				
+				
+				var end, start, summary;
+				
+				if ($scope.dateFrom || $scope.dateTo) {
+					if ($.isEmptyObject($scope.results)) return;
+	
+					end = $scope.results[$scope.results.length - 1];
+					start = $scope.results[0];
+					summary = dataService.getSummary(start, end);
+				} else {
+					if ($.isEmptyObject($scope.docs)) return;
+					
+					start = $scope.docs[$scope.docs.length - 1];
+					end = $scope.docs[0];
+					summary = dataService.getSummary(start, end);
+				}
+
+				$.extend($scope, summary);
+				$scope.docs = dataService.calculate($scope.docs);
+			}
+
+			$scope.windowWidth = window.innerWidth;
+			$(window).resize(function () {
+				$scope.$apply(function () {
+					$scope.windowWidth = window.innerWidth;
+				});
+			});
+		})
 		
+		.directive('datetimePicker', function($timeout) {
+			return {
+				restrict: 'A',
+				link: function (scope, element, attrs) {
+					var opts = { value: new Date() };
+					var extraOpts = {};
+					switch (attrs.datetimePicker) {
+						case 'date':
+							extraOpts.timepicker = false;
+							extraOpts.datepicker = true;
+							extraOpts.format = 'M j, Y';
+							break;
+						case 'time':
+							extraOpts.timepicker = true;
+							extraOpts.datepicker = false;
+							extraOpts.format = 'h:i A';
+							extraOpts.step = 15;
+							break;
+						default:
+							extraOpts.format = 'M j, Y h:i A';
+							extraOpts.step = 15;
+							break;
+					}
+					$.extend(opts, extraOpts);
+					$('[datetime-picker=\"'+attrs.datetimePicker+'\"]').datetimepicker(opts);
+				}
+			}
+		})
+
 		.directive('navbar', function () {
 			return {
 				restrict: 'E',
 				templateUrl: 'partials/navbar.html',
-				controller: 'MainController',
-				controllerAs: 'main'
+				controller: 'MainController'
+			};
+		})
+		
+		.directive('copyright', function () {
+			return {
+				restrict: 'E',
+				templateUrl: 'partials/copyright.html',
+				controller: 'MainController'
 			};
 		})
 
@@ -515,4 +921,35 @@
 	//       }
 	//     };
 	//   })
-})()
+		;
+
+	// Helpers
+
+	String.format = function () {
+		var s = arguments[0];
+		for (var i = 0; i < arguments.length - 1; i++) {
+			var reg = new RegExp("\\{" + i + "\\}", "gm");
+			s = s.replace(reg, arguments[i + 1]);
+		}
+		return s;
+	}
+
+	// function extractData(arr, filter) {
+	// 	return _.map(_.where(arr, filter));
+	// }
+
+	function compare(a, b) {
+		return b._id - a._id;
+	}
+
+	function getIndex(data, docId) {
+		var indexes = $.map(data, function (obj, index) {
+			if (obj._id == docId) {
+				return index;
+			}
+		});
+		return indexes[0];
+	}
+
+
+})();

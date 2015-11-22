@@ -3,9 +3,15 @@
   <header id="header">
   </header>
   <section id="summary">
-    <h2>Summary</h2>
+    <h2>Summary <small ng-bind-template="{{
+      (dateFrom || dateTo) ? '(Filtered by Date)' : ''
+    }}"></small></h2>
     <div id="summary-details">
       <dl class="summary">
+        <dt ng-show="dateFrom">Start Date</dt>
+        <dd ng-show="dateFrom" ng-bind="dateFrom"></dd>
+        <dt ng-show="dateTo">End Date</dt>
+        <dd ng-show="dateTo"ng-bind="dateTo"></dd>
         <dt>Start Reading</dt>
         <dd>
             <span ng-class="{'invalid': !startReading}"
@@ -13,7 +19,7 @@
             <span class="datetime sm-left" ng-class="{'hidden': !startReading}"
                 ng-bind-template="({{startDateTime | date:'mediumDate'}})"></span>
         </dd>
-        <dt>Latest Reading</dt>
+        <dt>End Reading</dt>
         <dd>
             <span ng-class="{'invalid': !latestReading}"
             ng-bind-template="{{latestReading | number:1}} kWh"></span>
@@ -54,23 +60,28 @@
         </dd>
       </dl>
     </div>
-    <button class="button toggle-filters" ng-click="showFilters = !showFilters">
+    <button class="button button-sm" ng-class="{'info': showFilters}" ng-click="showFilters = !showFilters">
       <span class="glyphicon glyphicon-search"></span>
       <span ng-bind-template="{{' ' + (showFilters ? 'Hide' : 'Show') + ' Search Tools'}}"></span>
     </button>
     <div class="filters" ng-show="showFilters">
       <h3>Search</h3>
-      <!--<label for="">Any
-        <input type="text" ng-model="search.$">
-      </label>
-      <label for="">
-        <input type="text" ng-model="search.date">
-      </label>-->
-      <label for="">by Date</label>
-      <input type="text" class="date-input" ng-change="resetLimit()" ng-model="dateFrom" placeholder="From Date (MMM D, YYYY)" datetime-picker>
-      <input type="text" class="date-input" ng-change="resetLimit()" ng-model="dateTo" placeholder="To Date (MMM D, YYYY)" datetime-picker>
+      <label for="">by Reading</label>
+        <input class="col-6" type="number" min="0" step="0.1" ng-model="readingRange.min" placeholder="Minimum reading">
+        <input class="col-6" type="number" min="0" step="0.1" ng-model="readingRange.max" placeholder="Maximum reading">
+      <label for="dateFrom">by Date</label>
+      <input id="dateFrom" type="text" class="col-6" ng-change="resetLimit()" ng-model="dateFrom" placeholder="From Date (MMM D, YYYY)" datetime-picker="date">
+      <input type="text" class="col-6" ng-change="resetLimit()" ng-model="dateTo" placeholder="To Date (MMM D, YYYY)" datetime-picker="date">
+      <!--<button class="button button-sm" ng-click="downloadResultJson()">
+        <span class="glyphicon glyphicon-download-alt"></span>
+        Download Data
+      </button>-->
     </div>
-    <span class="entries-count" ng-bind-template="{{'Showing ' + results.length + ' out of ' + docs.length + ' entries'}}"></span>
+    <span class="entries-count" ng-bind-template="{{
+      'Showing ' + results.length + ' out of '
+      + (filteredDates.length != docs.length ? filteredDates.length + ' search results from ' : '')
+      + docs.length + ' entries.'
+    }}"></span>
     <div id="flip-scroll" class="table-wrap">
       <table id="table-summary">
         <thead>
@@ -86,9 +97,9 @@
           </tr>
         </thead>
         <tbody when-scroll-ends="loadMoreRecords()" in-view-container>
-          <!--<tr ng-repeat="doc in docs | reverse | limitTo:limit | filter:search as results" class="animate"-->
-          <!--<tr ng-repeat="doc in docs | reverse | limitTo:limit | dateFilter:dateFrom:dateTo as results" class="animate"-->
-          <tr ng-repeat="doc in docs | reverse | dateFilter:dateFrom:dateTo | limitTo:limit as results" class="animate"
+          <tr ng-repeat="doc in (filteredReadings = (
+                filteredDates = (docs | reverse | dateFilter:dateFrom:dateTo)) | rangeFilter:readingRange
+              ) | limitTo:limit as results" class="animate"
               ng-init="doc.date = (doc._id | date:'mediumDate'); doc.time = (doc._id | date:'shortTime')">
             <td class="entry-count" ng-show="windowWidth <= 800" ng-bind="$index + 1"></td>
             <td ng-bind-template="{{doc.reading | number:1}}"></td>
@@ -103,7 +114,7 @@
             <td ng-bind-template="{{doc.aveUsagePerHour | number:1}}"></td>
             <td ng-bind-template="{{doc.aveCostPerHour | currency:'P '}}" class="no-wrap"></td>
           </tr>
-          <tr ng-hide="limit > docs.length || limit > results.length">
+          <tr ng-hide="limit >= docs.length || limit >= results.length || limit >= filteredReadings.length">
               <td colspan="8">
                 <span class="load-more" ng-class="{'hidden': windowWidth <= 800}">
                   <img src="/img/ajax-loader.gif" alt="load-icon"> Loading more...

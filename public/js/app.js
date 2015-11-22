@@ -29,17 +29,27 @@
 			;
 		})
 
-		.run(function ($rootScope, $cookies, data) {
+		.run(function ($rootScope, $state, $stateParams, $cookies, data) {
 			var id = $cookies.get('guid');
 			if (!id) {
 				$cookies.put('guid', guid());
 			}
-			// console.log($cookies.get('guid'));
-		
+			
 			function guid() {
 				function s4() { return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1); }
 				return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
 			}
+			
+			$rootScope.$state = $state;
+    	$rootScope.$stateParams = $stateParams; 
+			
+			$rootScope.$on('$stateChangeSuccess',
+				function(event, toState, toParams, fromState, fromParams) {
+					// $rootScope.$state.current = toState;
+					$rootScope.$state.previous = fromState;
+					// console.log($rootScope.$state.previous);
+				}
+			)
 		})
 
 		.factory('Scopes', function ($rootScope, $cookies) {
@@ -88,8 +98,9 @@
 				var df = new Date(from) || new Date();
 				var dt = new Date(to) || new Date();
 				var arrayToReturn = [];
-				df = df.getTime();
-				dt = dt.getTime();
+				
+				df = moment(df.getTime()).toDate().valueOf();
+				dt = moment(dt.getTime()).add(1, 'days').toDate().valueOf();
 				
 				for (var i=0; i<items.length; i++){
 						var dateTime = parseInt(items[i]._id);
@@ -103,6 +114,23 @@
 						}
 				}
 				return arrayToReturn;
+			};
+		})
+		
+		.filter('rangeFilter', function() {
+			return function( items, range ) {
+				if (!range) return items;
+				
+				var filtered = [];
+				var min = parseFloat(range.min || 0);
+				var max = parseFloat(range.max) || (items[items.length - 1] ? items[items.length - 1].reading : false);
+				
+				angular.forEach(items, function(item) {					
+					if( item.reading >= min && (!max || item.reading <= max ))  {
+						filtered.push(item);
+					}
+				});
+				return filtered;
 			};
 		})
 
@@ -226,7 +254,6 @@
 					sync = db.sync(remoteCouch, {
 						live: true,
 						filter: function (doc) {
-							// console.log(doc);
 							return doc.type === 'reading' || doc._deleted;
 						}
 					}).on('paused', function () {
@@ -280,7 +307,7 @@
 				})
 					.then(function (response) {
 						var docs = response.rows.map(function (row) { return row.doc; });
-						// console.log(docs.length);
+						// console.log(docs);
 
 						angular.forEach(docs, function (doc, key) {
 							switch (doc.type) {
@@ -358,6 +385,19 @@
 							// console.log(settings);
 							login();
 						}
+						break;
+					default:
+						console.log(newDoc.reading);
+						// if (newDoc.reading) {
+						// 	newDoc.type = 'reading';
+						// 	//tempDocs.push(newDoc);
+							
+						// 	db.put(newDoc).then(function(res) {
+						// 		console.log(res);
+						// 	}).catch(function(err) {
+						// 		console.log(err);
+						// 	});
+						// }
 						break;
 				}
 			}
@@ -487,7 +527,6 @@
 
 			var flashDuration = 3500;
 			// $scope.appName = ".";
-			// $scope.appName = "electricity-usage";
 			$scope.appName = "reading-trackr";
 			$scope.title = $scope.appName + " App";
 			$scope.flashDuration = flashDuration;
@@ -497,6 +536,10 @@
 			$scope.setTitle = function (pageTitle) {
 				//console.log(pageTitle);
 				//$scope.title = pageTitle ? pageTitle + " | " + $scope.appName : $scope.appName;
+			}
+			
+			$scope.animateFrom = function() {
+				return $cope.$state.current.name == 'home' ? 'from-right' : 'from-left';
 			}
 			
 			var currentYear = new Date().getFullYear();
@@ -527,22 +570,16 @@
 			}
 
 			$scope.$on('scope.stored', function (event, storedData) {
-				// console.log(event.name, storedData);
 				$scope.$apply(function () {
 					switch (storedData.key) {
 						case 'dbStatus-' + $cookies.get('guid'):
-							// console.log(storedData.key, storedData.value);
-							// console.log($scope.settings);
 							$scope.dbConnection = storedData.value.dbConnection;
-							// $scope.syncEnabled = storedData.value.enableSync;
 
 							if(!$scope.dbConnection && $scope.settings.enableSync)
 								toggleDbSync();
 
-							//console.log($scope.dbConnection, data, $scope.syncEnabled, storedData.value);
 							break;
 						case 'flashMessage-' + $cookies.get('guid'):
-							// console.log(storedData.value);
 							flashMessage.create({
 								severity: storedData.value.severity,
 								title: storedData.value.title,
@@ -554,7 +591,6 @@
 							break;
 					}
 				});
-				// console.log($scope.syncEnabled, data.dbConnection);
 			});
 
 			var settings = {
@@ -565,14 +601,11 @@
 			$scope.saveSettings = function () {
 				var newSettings = settings;
 				$.extend(newSettings, $scope.settings);
-				// console.log(newSettings);
 				data.put(newSettings).then(function (res) {
 					data.get(settings._id).then(function (doc) {
 						$scope.$apply(function () {
 							$.extend(data.settings, doc);
 							$scope.settings = data.settings;
-							// console.log($scope.settings);
-							// $scope.syncEnabled = $scope.settings.server && $scope.settings.database;
 						});
 						Scopes.store('flashMessage', {title: 'Success!', message: 'Settings saved successfully!', severity: 'success'});
 					});
@@ -580,22 +613,16 @@
 			};
 
 			$scope.resetSettings = function () {
-				// console.log(settings);
 				data.get(settings._id).then(function (doc) {
-					// console.log(doc);
 					doc.server = null;
 					doc.database = null;
 					doc.username = null;
 					doc.password = null;
 					doc.electricityRate = null;
-					// console.log(doc);
 					data.put(doc).then(function () {
 						$scope.$apply(function () {
 							$scope.settings = data.settings;
-							// console.log($scope.settings);
-							//$scope.result = "Settings cleared!";
 							$scope.settingsForm.$setPristine();
-							//$scope.syncEnabled = false;
 						});
 						Scopes.store('flashMessage', {title: 'Success!', message: 'Settings cleared successfully!', severity: 'success'});
 					})
@@ -696,15 +723,10 @@
 
 
 			$scope.deleteDoc = function (doc) {
-				// console.log("delete");
 				data.delete(doc)
 					.catch(function (reason) {
 						console.log(reason);
 					});
-			};
-
-			$scope.updateTodo = function (todo) {
-				// console.log("update");				
 			};
 
 			function removeSeconds(dateTime) {
@@ -721,7 +743,7 @@
 			});
 		})
 
-		.controller('SummaryController', function ($scope, data, Scopes, dataService) {
+		.controller('SummaryController', function ($scope, data, Scopes, dataService, $filter) {
 			$scope.docs = data.docs;
 			$scope.limit = 10;
 
@@ -729,24 +751,43 @@
 				$scope.limit = 10;
 			}
 
-			$scope.loadMore = function (override) {
-				if ($scope.limit < $scope.docs.length && $scope.windowWidth > 800 || override)
-					$scope.limit += 10;
+			$scope.loadMore = function (override, limit) {
+				if (limit) $scope.limit = limit;
+				else {
+					if ($scope.limit < $scope.docs.length && $scope.windowWidth > 800 || override)
+						$scope.limit += 10;
+				}
 			}
-
-			$scope.loadMoreRecords = function () {
-				console.log('loadMoreRecords');
+			
+			$scope.downloadResultJson = function() {
+				//console.log(JSON.stringify($scope.filteredReadings));
+				//var limit = $scope.limit;
+				
+				
+				//$scope.limit = $scope.filteredReadings.length;
+				//console.log($scope.limit);
+				//console.log($('#table-summary').html());
+				//$scope.limit = limit;
 			}
 
 			$scope.getSummary = function () {
-				if ($.isEmptyObject($scope.docs)) return;
-
-				var end = $scope.docs[0];
-				var start = $scope.docs[$scope.docs.length - 1];
-				var summary = dataService.getSummary(start, end);
+				var end, start, summary;
+				
+				if ($scope.dateFrom || $scope.dateTo) {
+					if ($.isEmptyObject($scope.filteredDates)) return;
+	
+					start = $scope.filteredDates[0];
+					end = $scope.dateTo ? $scope.filteredDates[$scope.filteredDates.length - 1] : $scope.docs[0];
+					summary = dataService.getSummary(start, end);
+				} else {
+					if ($.isEmptyObject($scope.docs)) return;
+					
+					start = $scope.docs[$scope.docs.length - 1];
+					end = $scope.docs[0];
+					summary = dataService.getSummary(start, end);
+				}
 
 				$.extend($scope, summary);
-
 				$scope.docs = dataService.calculate($scope.docs);
 			}
 
@@ -756,27 +797,33 @@
 					$scope.windowWidth = window.innerWidth;
 				});
 			});
-
-			$scope.attachDateTimePicker = function(id) {
-				console.log(id);
-				// $('#' + id).datetimepicker({ format: 'M j, Y h:i A', step: 15, value: new Date() });
-			}
 		})
 		
 		.directive('datetimePicker', function($timeout) {
 			return {
 				restrict: 'A',
 				link: function (scope, element, attrs) {
-					// console.log(attrs);
-					// console.log($('[ng-model="dateFrom"]'));
-					$('[datetime-picker]').datetimepicker({
-						format: 'M j, Y h:i A', step: 15, value: new Date(),
-						mask: true
-					});
-					//element[0].datetimepicker({ format: 'M j, Y h:i A', step: 15, value: new Date() });
-					// $timeout(function () {
-					// 	console.log(element[0])
-					// }, 0);
+					var opts = { value: new Date() };
+					var extraOpts = {};
+					switch (attrs.datetimePicker) {
+						case 'date':
+							extraOpts.timepicker = false;
+							extraOpts.datepicker = true;
+							extraOpts.format = 'M j, Y';
+							break;
+						case 'time':
+							extraOpts.timepicker = true;
+							extraOpts.datepicker = false;
+							extraOpts.format = 'h:i A';
+							extraOpts.step = 15;
+							break;
+						default:
+							extraOpts.format = 'M j, Y h:i A';
+							extraOpts.step = 15;
+							break;
+					}
+					$.extend(opts, extraOpts);
+					$('[datetime-picker=\"'+attrs.datetimePicker+'\"]').datetimepicker(opts);
 				}
 			}
 		})
