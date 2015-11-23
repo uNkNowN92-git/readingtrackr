@@ -1,6 +1,5 @@
 <!doctype html>
-<html lang="en" ng-app="electricityUsageApp">
-<!--<html lang="en" manifest="manifest.appcache">-->
+<html lang="en" ng-app="electricityUsageApp" manifest="manifest.appcache">
 
 <head>
   <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
@@ -27,7 +26,6 @@
   <div class="container">
     <h1 class="app-name" ng-bind="appName"></h1>
   </div>
-  <!--<div class="container ui-view-container" ng-class="[$state.current.name + '-current', $state.previous.name + '-previous']">-->
   <div class="container ui-view-container">
     <div id="main-content" ui-view></div>
     <copyright></copyright>
