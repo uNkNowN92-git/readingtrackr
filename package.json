@@ -1,15 +1,14 @@
 {
-  "name": "app",
+  "name": "reading-trackr",
   "version": "1.0.0",
-  "description": "",
+  "description": "Electricity Reading Tracker App",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "uNkNowN92",
   "license": "ISC",
   "dependencies": {
-    "angular-hammer": "^2.1.10",
     "express": "^4.13.3"
   }
 }
