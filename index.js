@@ -12,10 +12,6 @@ app.get('/', function(req, res){
     res.sendFile(path.join(__dirname + '/index.html'));
 });
 
-app.get('/pouch-todo', function(req, res){
-    res.sendFile(path.join(__dirname + '/public/pouch-todo/index.html'));
-});
-
 var server = app.listen(server_port, server_ip_address, function () {
   var host = server.address().address;
   var port = server.address().port;
