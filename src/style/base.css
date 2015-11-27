@@ -354,8 +354,8 @@ label[for='toggle-all'] {
   -o-transition: color 0.4s;
   transition: color 0.4s;
 }
-#todo-list li.start-of-month {
-  padding-right: 45px;
+#todo-list li.start-of-month label:nth-child(2) {
+  padding-right: 50px;
 }
 #todo-list li label.reading {
   min-width: 70px;
@@ -389,7 +389,7 @@ label[for='toggle-all'] {
 }
 
 #todo-list li.start-of-month .destroy {
-  right: 27px;
+  right: 30px;
 }
 
 #todo-list li .destroy {
@@ -406,16 +406,15 @@ label[for='toggle-all'] {
 
 #todo-list li.editing .start-of-month {
   display: block;
-  right: 2px;
-  line-height: 43px; /* 40 + a couple of pixels visual adjustment */
-  font-size: 20px;
+  right: -1px;
+  line-height: 44px;
   color: #d9d9d9;
 }
 
 #todo-list li .start-of-month-status {
   display: block;
   position: absolute;
-  top: 3px;
+  top: 1px;
   bottom: 0;
   right: -1px;
   color: #FFE710;
@@ -719,7 +718,7 @@ div.center
   #todo-list li label {
     padding: 12px;
   }
-  #todo-list li.start-of-month {
+  #todo-list li.start-of-month label:last-child {
     padding-right: 25px;
   }
   #todo-list li input.edit {
