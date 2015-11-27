@@ -52,3 +52,6 @@
 .glyphicon-download:before {
   content: "\e026";
 }
+.glyphicon-file:before {
+    content: "\e022";
+}

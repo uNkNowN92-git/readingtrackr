@@ -27,7 +27,7 @@ button:focus {
 body {
   font: 14px 'Droid Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   line-height: 1.4em;
-  background: #eaeaea url('bg.png');
+  background: #eaeaea url('../img/bg.png');
   color: #272727;
   padding: 0 2px;
   -webkit-font-smoothing: antialiased;
@@ -397,17 +397,17 @@ label[for='toggle-all'] {
   text-decoration: line-through;
 }
 
-#todo-list li .destroy {
+#todo-list li .destroy,
+#todo-list li .edit-item,
+#todo-list li .save {
   display: none;
   position: absolute;
   top: 0;
-  right: 10px;
   bottom: 0;
   width: 40px;
   height: 40px;
   margin: auto 0;
   font-size: 22px;
-  color: #a88a8a;
   -webkit-transition: all 0.2s;
   -moz-transition: all 0.2s;
   -ms-transition: all 0.2s;
@@ -415,8 +415,36 @@ label[for='toggle-all'] {
   transition: all 0.2s;
 }
 
+#todo-list li .destroy {
+  right: 10px;
+  color: #a88a8a;
+}
+#todo-list li .edit-item {
+  font-size: 0.7em;
+  left: 2px;
+  color: #454545;
+}
+#todo-list li.editing .save {
+  display: block;
+  left: 2px;
+  color: #3F9D4A;
+}
+
 #todo-list li .destroy:hover {
-  text-shadow: 0 0 1px #000, 0 0 10px rgba(199, 107, 107, 0.8);
+  text-shadow: 0 0 1px #fff, 0 0 10px rgba(199, 107, 107, 0.8);
+}
+
+#todo-list li .save:hover {
+  text-shadow: 0 0 1px #fff, 0 0 10px rgba(133, 214, 151, 0.8);
+}
+
+#todo-list li .edit-item:hover {
+  text-shadow: 0 0 1px #fff, 0 0 10px rgba(125, 125, 125, 0.8);
+}
+
+#todo-list li .destroy:hover,
+#todo-list li .save:hover,
+#todo-list li .edit-item:hover {
   -webkit-transform: scale(1.3);
   -moz-transform: scale(1.3);
   -ms-transform: scale(1.3);
@@ -428,7 +456,12 @@ label[for='toggle-all'] {
   content: '✖';
 }
 
-#todo-list li:hover .destroy {
+#todo-list li.editing .save:after {
+  content: '✔';
+}
+
+#todo-list li:hover .destroy,
+#todo-list li:hover .edit-item {
   display: block;
 }
 
@@ -803,7 +836,7 @@ span.datetime {
   white-space: nowrap;
 }
 
-.no-wrap {
+no-wrap, .no-wrap {
   white-space: nowrap;
 }
 

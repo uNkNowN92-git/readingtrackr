@@ -11,17 +11,18 @@
       <form name="editForm" ng-submit="editReading(editingId)">
         <li ng-repeat="doc in todos | limitTo:limit" ng-class="{'editing': editingId == doc._id, 'animate': editingId != doc._id}">
           <div class="view">
-            <input class="toggle" type="checkbox">
-            <label hm-doubletap="beginEditing(doc._id, 'reading', $index)" class="reading" ng-bind-template="{{doc.reading | number:1}}"></label>
-            <label hm-doubletap="beginEditing(doc._id, 'dateTime', $index)" class="datetime">
+            <!--<input class="toggle" type="checkbox">-->
+            <label hm-doubletap="beginEditing(doc._id, 'reading')" class="reading" ng-bind-template="{{doc.reading | number:1}}"></label>
+            <label hm-doubletap="beginEditing(doc._id, 'dateTime')" class="datetime">
               <span class="datetime" ng-bind-template="{{doc._id | date:'mediumDate'}}"></span>
               <span class="datetime" ng-bind-template="{{doc._id | date:'shortTime'}}"></span>
             </label>
+            <button class="glyphicon glyphicon-pencil edit-item" type="button" ng-click="beginEditing(doc._id, 'reading')"></button>
             <button class="destroy" type="button" ng-click="deleteDoc(doc)"></button>
           </div>
             <input class="edit reading" validate-float focus="focusReading[$index]" ng-model="editedReading[$index]">
             <input class="edit datetime" id="{{doc._id}}" focus="focusDateTime[$index]" ng-model="editedDateTime[$index]">
-            <button class="hidden-submit" type="submit"></button>
+            <button class="save" type="submit"></button>
         </li>
         <li>
           <div class="view">
@@ -44,5 +45,5 @@
 </section>
 <div id="logs"></div>
 <footer id="info">
-  <p>Double-click to edit an entry</p>
+  <p>Double-click the row or Click the pencil icon to edit an entry</p>
 </footer>

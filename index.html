@@ -1,6 +1,6 @@
 <!doctype html>
-<!--<html lang="en" ng-app="electricityUsageApp">-->
-<html lang="en" ng-app="electricityUsageApp" manifest="manifest.appcache">
+<html lang="en" ng-app="electricityUsageApp">
+<!--<html lang="en" ng-app="electricityUsageApp" manifest="manifest.appcache">-->
 
 <head>
   <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
@@ -16,9 +16,7 @@
     <header>
       <navbar></navbar>
     </header>
-    <div class="container" ng-controller="MainController">
-      <div flash-message="{{flashDuration}}"></div>
-    </div>
+    <div ng-controller="MainController" flash-message="{{flashDuration}}"></div>
   </div>
   <div class="container">
     <h1 class="app-name" ng-bind="appName"></h1>
@@ -28,8 +26,8 @@
     <copyright></copyright>
   </div>
 
-  <script src="js/applib.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/applib.min.js"></script>
+  <script src="js/app.min.js"></script>
 </body>
 
 </html>

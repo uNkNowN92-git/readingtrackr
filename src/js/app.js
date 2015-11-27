@@ -5,7 +5,7 @@
 	var app = angular.module('electricityUsageApp',
 		['ui.router', 'infinite-scroll', 'hmTouchEvents', 'flash', 'ngAnimate', 'ngCookies', 'ngMessages'])
 
-		.config(["$stateProvider", "$urlRouterProvider", function ($stateProvider, $urlRouterProvider) {
+		.config(function ($stateProvider, $urlRouterProvider) {
 			$urlRouterProvider.otherwise('/');
 
 			$stateProvider
@@ -27,9 +27,9 @@
 					controller: 'MainController'
 				})
 			;
-		}])
+		})
 
-		.run(["$rootScope", "$state", "$stateParams", "$cookies", "data", function ($rootScope, $state, $stateParams, $cookies, data) {
+		.run(function ($rootScope, $state, $stateParams, $cookies, data) {
 			var id = $cookies.get('guid');
 			if (!id) {
 				$cookies.put('guid', guid());
@@ -50,9 +50,9 @@
 					// console.log($rootScope.$state.previous);
 				}
 			);
-		}])
+		})
 
-		.factory('Scopes', ["$rootScope", "$cookies", function ($rootScope, $cookies) {
+		.factory('Scopes', function ($rootScope, $cookies) {
 			var mem = {};
 
 			function suffixed(key) {
@@ -74,9 +74,9 @@
 					delete mem[key];
 				}
 			};
-		}])
+		})
 
-		.filter('humanizeDuration', ["$sce", function ($sce) {
+		.filter('humanizeDuration', function ($sce) {
 			return function (duration) {
 				duration = parseInt(duration / 1000) * 1000;
 				if (duration) {
@@ -89,7 +89,7 @@
 					return $sce.trustAsHtml(el.join(" and "));
 				} else return null;
 			};
-		}])
+		})
 		
 		.filter("dateFilter", function() {
 			return function(items, from, to) {
@@ -148,7 +148,7 @@
 			return db;
 		})
 
-		.factory('util', ["$q", "$rootScope", function ($q, $rootScope) {
+		.factory('util', function ($q, $rootScope) {
 			return {
 				resolve: function (value) {
 					$rootScope.$apply(function () {
@@ -161,9 +161,9 @@
 					});
 				}
 			};
-		}])
+		})
 
-		.factory('data', ["$rootScope", "$cookies", "db", "util", "dataService", "Scopes", function ($rootScope, $cookies, db, util, dataService, Scopes) {
+		.factory('data', function ($rootScope, $cookies, db, util, dataService, Scopes) {
 			var data = [];
 			var settings = {};
 			var dbConnection = false;
@@ -478,9 +478,9 @@
 						.catch(util.reject);
 				}
 			};
-		}])
+		})
 
-		.service('flashMessage', ["Flash", function(Flash){
+		.service('flashMessage', function(Flash){
 			return {
 				create: function(flash) {
 					Flash.dismiss();
@@ -490,9 +490,9 @@
 					Flash.pause();
 				}
 			};
-		}])
+		})
 
-		.service('dataService', ["Scopes", "$cookies", function (Scopes, $cookies) {
+		.service('dataService', function (Scopes, $cookies) {
 			var settings, electricityRate;
 
 			function getSettings() {
@@ -546,9 +546,9 @@
 					return summary;
 				}
 			};
-		}])
+		})
 
-		.controller('MainController', ["$scope", "$cookies", "db", "data", "Scopes", "flashMessage", function ($scope, $cookies, db, data, Scopes, flashMessage) {
+		.controller('MainController', function ($scope, $cookies, db, data, Scopes, flashMessage) {
 
 			var flashDuration = 3500;
 			// $scope.appName = ".";
@@ -650,9 +650,9 @@
 				}).catch(function (err) { console.log(err); });
 			};
 
-		}])
+		})
 
-		.controller('DataController', ["$scope", "data", "dataService", "Scopes", "$filter", function ($scope, data, dataService, Scopes, $filter) {
+		.controller('DataController', function ($scope, data, dataService, Scopes, $filter) {
 			$scope.todos = data.docs;
 			$scope.focusReading = [];
 			$scope.focusDateTime = [];
@@ -770,9 +770,9 @@
 					$scope.windowWidth = window.innerWidth;
 				});
 			});
-		}])
+		})
 
-		.controller('SummaryController', ["$scope", "data", "Scopes", "dataService", "$filter", function ($scope, data, Scopes, dataService, $filter) {
+		.controller('SummaryController', function ($scope, data, Scopes, dataService, $filter) {
 			$scope.docs = data.docs;
 			$scope.limit = 10;
 
@@ -826,9 +826,9 @@
 					$scope.windowWidth = window.innerWidth;
 				});
 			});
-		}])
+		})
 		
-		.directive('datetimePicker', ["$timeout", function($timeout) {
+		.directive('datetimePicker', function($timeout) {
 			return {
 				restrict: 'A',
 				link: function (scope, element, attrs) {
@@ -855,7 +855,7 @@
 					$('[datetime-picker=\"'+attrs.datetimePicker+'\"]').datetimepicker(opts);
 				}
 			};
-		}])
+		})
 
 		.directive('navbar', function () {
 			return {
@@ -873,7 +873,7 @@
 			};
 		})
 
-		.directive('notification', ["$timeout", function ($timeout) {
+		.directive('notification', function ($timeout) {
 			return {
 				restrict: 'E',
 				template:"<div class='alert alert-{{alertData.type}}' ng-show='alertData.message' role='alert' data-notification='{{alertData.status}}'>{{alertData.message}}</div>",
@@ -881,7 +881,7 @@
 					alertData:"="
 				}
 			};
-		}])
+		})
 
 		.directive('validateFloat', function () {
 
@@ -909,7 +909,7 @@
 			};
 		})
 
-		.directive('autoFocus', ["$timeout", function ($timeout) {
+		.directive('autoFocus', function ($timeout) {
 			return {
 				restrict: 'AC',
 				link: function (_scope, _element) {
@@ -918,9 +918,9 @@
 					}, 0);
 				}
 			};
-		}])
+		})
 
-		.directive('focus', ["$timeout", function ($timeout) {
+		.directive('focus', function ($timeout) {
 			return {
 				scope: {
 					trigger: '=focus'
@@ -935,7 +935,7 @@
 					});
 				}
 			};
-		}])
+		})
 		
 		.directive('onShow', function () {
 			// TODO
