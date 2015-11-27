@@ -1,0 +1,4 @@
+* use startOfMonth as the default start reading
+	- only one entry in each month can be set as startOfMonth
+* show startOfMonths in Search Tools > More Options as checkboxes
+	- add year filter: by year or all years
