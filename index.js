@@ -1,5 +1,5 @@
 var server_port       = process.env.OPENSHIFT_NODEJS_PORT || 8080
-var server_ip_address = process.env.OPENSHIFT_NODEJS_IP   || '10.230.57.17'
+var server_ip_address = process.env.OPENSHIFT_NODEJS_IP   || 'localhost'
  
 var http    = require("http");
 var express = require('express');
