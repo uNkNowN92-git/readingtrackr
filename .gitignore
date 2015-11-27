@@ -1,4 +1,5 @@
 *.zip
+*.log
 .vscode
 node_modules
 typings

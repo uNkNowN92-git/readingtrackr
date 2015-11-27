@@ -658,6 +658,7 @@
 			$scope.focusDateTime = [];
 			$scope.editedReading = [];
 			$scope.editedDateTime = [];
+			$scope.editedStartOfMonth = [];
 			$scope.limit = 10;
 
 			$scope.loadMore = function () {
@@ -674,7 +675,8 @@
 				$scope.editingId = id;
 				$scope.editedReading[index] = parseFloat(doc.reading).toFixed(1);
 				$scope.editedDateTime[index] = $filter('date')(doc._id, 'mediumDate') + " " + $filter('date')(doc._id, 'shortTime');
-
+				$scope.editedStartOfMonth[index] = doc.startOfMonth ? true : '';
+				
 				$.datetimepicker.setLocale('en');
 				$('#' + id).datetimepicker({ format: 'M j, Y h:i A', step: 15, value: new Date(parseInt(doc._id)) });
 			};
@@ -684,16 +686,14 @@
 				var updatedDoc = {
 					_id: new Date($scope.editedDateTime[index]).getTime().toString(),
 					reading: parseFloat($scope.editedReading[index]),
+					startOfMonth: $scope.editedStartOfMonth[index] === true,
 				};
 				updatedDoc._id = removeSeconds(updatedDoc._id);
 
 				data.get(docId).then(function (doc) {
 					if (updatedDoc._id != doc._id) {
 						data.delete(doc).catch(function (reason) { console.log(reason); });
-						var newDoc = {
-							type: 'reading',
-							startReading: $scope.startOfMonth || false
-						};
+						var newDoc = { type: 'reading' };
 						$.extend(newDoc, updatedDoc);
 						data.put(newDoc).then(function (res) { 
 							resetEditedItem(index);
@@ -701,6 +701,13 @@
 					}
 					else if (updatedDoc.reading != doc.reading) {
 						$.extend(doc, updatedDoc);
+						data.put(doc).then(function (res) {
+							resetEditedItem(index);
+						}, function (err) { console.log(err); });
+					}
+					else if (updatedDoc.startOfMonth != doc.startOfMonth) {
+						$.extend(doc, updatedDoc);
+						console.log(doc);
 						data.put(doc).then(function (res) {
 							resetEditedItem(index);
 						}, function (err) { console.log(err); });
@@ -735,7 +742,7 @@
 					type: 'reading',
 					_id: removeSeconds($scope.dateTime || new Date().getTime().toString()),
 					reading: parseFloat($scope.newReading).toFixed(1),
-					startReading: $scope.startOfMonth || false,
+					startOfMonth: $scope.startOfMonth || false,
 				};
 
 				data.put(newDoc).then(function (res) {

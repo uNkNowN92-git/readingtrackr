@@ -9,20 +9,22 @@
   <section id="main">
     <ul id="todo-list">
       <form name="editForm" ng-submit="editReading(editingId)">
-        <li ng-repeat="doc in todos | limitTo:limit" ng-class="{'editing': editingId == doc._id, 'animate': editingId != doc._id}">
+        <li ng-repeat="doc in todos | limitTo:limit"
+            ng-class="{'editing': editingId == doc._id, 'animate': editingId != doc._id, 'start-of-month': doc.startOfMonth}">
           <div class="view">
-            <!--<input class="toggle" type="checkbox">-->
             <label hm-doubletap="beginEditing(doc._id, 'reading')" class="reading" ng-bind-template="{{doc.reading | number:1}}"></label>
             <label hm-doubletap="beginEditing(doc._id, 'dateTime')" class="datetime">
               <span class="datetime" ng-bind-template="{{doc._id | date:'mediumDate'}}"></span>
               <span class="datetime" ng-bind-template="{{doc._id | date:'shortTime'}}"></span>
             </label>
+            <button ng-show="doc.startOfMonth" type="button" disabled="disabled" class="start-of-month-status glyphicon glyphicon-star"></button>
             <button class="glyphicon glyphicon-pencil edit-item" type="button" ng-click="beginEditing(doc._id, 'reading')"></button>
-            <button class="destroy" type="button" ng-click="deleteDoc(doc)"></button>
+            <button class="destroy glyphicon glyphicon-trash" type="button" ng-click="deleteDoc(doc)"></button>
           </div>
-            <input class="edit reading" validate-float focus="focusReading[$index]" ng-model="editedReading[$index]">
-            <input class="edit datetime" id="{{doc._id}}" focus="focusDateTime[$index]" ng-model="editedDateTime[$index]">
-            <button class="save" type="submit"></button>
+          <input class="edit reading" validate-float focus="focusReading[$index]" ng-model="editedReading[$index]">
+          <input class="edit datetime" id="{{doc._id}}" focus="focusDateTime[$index]" ng-model="editedDateTime[$index]">
+          <input class="toggle start-of-month glyphicon glyphicon-star" ng-model="editedStartOfMonth[$index]" type="checkbox" ng-true-value="true">
+          <button class="save glyphicon glyphicon-floppy-disk" type="submit"></button>
         </li>
         <li>
           <div class="view">
