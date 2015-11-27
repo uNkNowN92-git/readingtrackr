@@ -410,8 +410,9 @@
 				docs: data,
 				settings: settings,
 				syncDB: login,
-				put: function (doc) {
+				put: function (doc, showFlash) {
 					return db.put(doc, function(err) {
+						if (showFlash) {
 							if (err) {
 								var errorMessage;
 								switch (err.name) {
@@ -443,9 +444,10 @@
 									Scopes.store('flashMessage', { title: 'Success!', message: message, severity: 'success' });
 								}
 							}
-						})
-						.then(util.resolve)
-						.catch(util.reject);
+						}
+					})
+					.then(util.resolve)
+					.catch(util.reject);
 				},
 				get: function (docId) {
 					return db.get(docId)
@@ -706,8 +708,15 @@
 						}, function (err) { console.log(err); });
 					}
 					else if (updatedDoc.startOfMonth != doc.startOfMonth) {
+						var withSameMonth = $scope.todos.sameMonth(updatedDoc._id);
+						var previousStartOfMonth = withSameMonth.startOfMonth();
+						
+						angular.forEach(previousStartOfMonth, function(entry) {
+							entry.startOfMonth = false;
+							data.put(entry, false).then(function (res) { }, function (err) { console.log(err); });
+						});
+						
 						$.extend(doc, updatedDoc);
-						console.log(doc);
 						data.put(doc).then(function (res) {
 							resetEditedItem(index);
 						}, function (err) { console.log(err); });
@@ -1009,10 +1018,21 @@
 		}
 		return s;
 	};
+	
+	Array.prototype.startOfMonth = function () {
+		return _.map(_.where(this, {'startOfMonth': true}));
+	};
 
-	// function extractData(arr, filter) {
-	// 	return _.map(_.where(arr, filter));
-	// }
+	Array.prototype.sameMonth = function (id) {
+		var month = moment(parseInt(id)).get('month');
+		var year = moment(parseInt(id)).get('year');
+		var startDate = moment([year, month]).toDate().valueOf();
+		var endDate = moment(startDate).endOf('month').toDate().valueOf();
+
+		return _.filter(this, function(e) {
+			return e._id >= startDate && e._id <= endDate && e._id != id;
+		});
+	};
 
 	function compare(a, b) {
 		return b._id - a._id;
