@@ -869,9 +869,12 @@
 			}
 
 			function updateStartReadings() {
+				var newDoc = {};
+				$.extend(newDoc, settings);
 				data.get(settings._id).then(function(doc) {
-					doc.startReadings = $scope.startReadings;
-					data.put(doc, true);
+					$.extend(newDoc, doc);
+					newDoc.startReadings = $scope.startReadings;
+					data.put(newDoc, true);
 				});
 			}
 			
