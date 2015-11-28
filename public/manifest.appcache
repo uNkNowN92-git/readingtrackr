@@ -1,5 +1,5 @@
 CACHE MANIFEST
-# v1.2.1 2015-26-15 14:40
+# v1.2.1 2015-28-15 12:40
 /
 partials/data.html
 partials/navbar.html
@@ -8,7 +8,6 @@ partials/summary.html
 partials/copyright.html
 
 style/styles.min.css
-style/bg.png
 
 font/DroidSans.ttf
 font/DroidSans-Bold.ttf
@@ -20,10 +19,9 @@ font/glyphicons-halflings-regular.woff
 font/glyphicons-halflings-regular.ttf
 
 js/applib.min.js
-js/app.js
+js/app.min.js
 
-img/hd-bg.png
-img/modal_close.png
+img/bg.png
 img/ajax-loader.gif
 
 NETWORK:
