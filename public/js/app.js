@@ -243,7 +243,7 @@
 			}
 
 			function syncDB() {
-				console.log("sync");
+				// console.log("sync");
 
 				var remoteCouchTemplate = 'http://{0}:{1}@{2}:5984/{3}';
 				var remoteCouch = String.format(remoteCouchTemplate, settings.username, settings.password, settings.server, settings.database);
@@ -262,12 +262,12 @@
 							// enableSync: false,
 							dbConnection: dbConnection
 						});
-						Scopes.store('flashMessage', {title: 'Success!', message: 'Database sync successful.', severity: 'success'});
+						Scopes.store('flashMessage', {title: 'Success!', message: 'Database sync successful.', severity: 'success', append: true });
 						
-						console.log('paused');
+						// console.log('paused');
 					}).on('active', function () {
-						console.log('active');
-						Scopes.store('flashMessage', {title: '', message: 'Syncing...', severity: 'info'});
+						// console.log('active');
+						Scopes.store('flashMessage', {title: '', message: 'Syncing...', severity: 'info', append: true });
 						
 						// dbConnection = true;
 					}).on('denied', function (info) {
@@ -430,10 +430,10 @@
 										errorMessage = 'Entry already exists.';
 										break;
 								}
-								Scopes.store('flashMessage', { title: 'Error!', message: errorMessage, severity: 'danger', pause: true });
+								Scopes.store('flashMessage', { title: 'Error!', message: errorMessage, severity: 'danger', pause: true, repeat: true });
 							} else {
 								var dbStatus = Scopes.get('dbStatus');
-								if (dbStatus === undefined || !dbStatus.dbConnection) {
+								if (dbStatus === undefined || !dbStatus.dbConnection || !settings.enableSync) {
 									var message = "";
 									switch (doc.type) {
 										case 'settings':
@@ -443,7 +443,7 @@
 											message = "Entry saved successfully!";
 											break;
 									}
-									Scopes.store('flashMessage', { title: 'Success!', message: message, severity: 'success' });
+									Scopes.store('flashMessage', { title: 'Success!', message: message, severity: 'success', repeat: true });
 								}
 							}
 						}
@@ -475,7 +475,7 @@
 												message = "Entry was deleted successfully!";
 												break;
 										}
-										Scopes.store('flashMessage', { title: 'Success!', message: message, severity: 'success' });
+										Scopes.store('flashMessage', { title: 'Success!', message: message, severity: 'success', repeat: true });
 									}
 									util.resolve();
 								}, util.reject);
@@ -485,11 +485,13 @@
 			};
 		}])
 
-		.service('flashMessage', ["Flash", function(Flash){
+		.service('flashMessage', ["Flash", "$timeout", function(Flash, $timeout){
 			return {
 				create: function(flash) {
 					Flash.dismiss();
-					Flash.create(flash.severity, '<strong>'+ flash.title + '</strong>&nbsp;&nbsp;' + flash.message, flash.class);
+					$timeout(function() {
+						Flash.create(flash.severity, '<strong>'+ flash.title + '</strong>&nbsp;&nbsp;' + flash.message, flash.class);
+					}, 100);
 				},
 				pause: function() {
 					Flash.pause();
@@ -597,6 +599,7 @@
 				}, function (err) { console.log(err); });
 			}
 
+			$scope.previousFlash = {};
 			$scope.$on('scope.stored', function (event, storedData) {
 				$scope.$apply(function () {
 					switch (storedData.key) {
@@ -608,14 +611,27 @@
 
 							break;
 						case 'flashMessage-' + $cookies.get('guid'):
-							flashMessage.create({
+							var obj = {
 								severity: storedData.value.severity,
 								title: storedData.value.title,
 								message: storedData.value.message
-							});
-							if (storedData.value.pause)
-								flashMessage.pause();
-    			
+							};
+							
+							// if (storedData.value.append) {
+							// 	var messages = [];
+							// 	if ($scope.previousFlash.message)
+							// 		messages.push($scope.previousFlash.message);
+							// 	if ($scope.previousFlash.message != obj.message)
+							// 		messages.push(obj.message);
+							// 	obj.message = messages.join('<br>');
+							// }
+							
+							if(!_.isEqual(obj, $scope.previousFlash) || storedData.value.repeat) {
+								flashMessage.create(obj);
+								if (storedData.value.pause)
+									flashMessage.pause();
+								$scope.previousFlash = obj;
+							}
 							break;
 					}
 				});
@@ -846,7 +862,7 @@
 				
 				angular.forEach(startReadings, function(doc, index) {
 					var next = startReadings[index - 1];
-					readings.push({
+					var obj = {
 						value: String.format("{0} ({1})",
 							$filter('number')(doc.reading, 1), $filter('date')(doc._id, 'mediumDate')),
 						_id: doc._id,
@@ -854,13 +870,29 @@
 						dateTo: next ? $filter('date')(next._id, 'mediumDate') : '', 
 						startReading: doc.reading,
 						endReading: next ? next.reading : ''
-					});
+					};
+						readings.push(obj);
 				});
 				
-				$scope.startReadings = readings;
+				if (isStartReadingsChanged(readings)) {
+					$scope.startReadings = readings;
+					updateStartReadings();
+				}
+					
 				$scope.selectedStartReading = getStartReading();
-				updateStartReadings();
 				updateFilters();
+			}
+			
+			function isStartReadingsChanged(readings) {
+				if (!$scope.startReadings) return true;
+				var changed = false;
+				for (var key = 0; key < readings.length; key++) {
+					var value = readings[key];
+					var oldCopy = $scope.startReadings[key] || {};
+					delete oldCopy.$$hashKey;
+					if (!_.isEqual(value, oldCopy)) {	changed = true; break; }
+				}
+				return changed;
 			}
 			
 			function getStartReading() {
@@ -870,7 +902,6 @@
 
 			function updateStartReadings() {
 				var newDoc = {};
-				$.extend(newDoc, settings);
 				data.get(settings._id).then(function(doc) {
 					$.extend(newDoc, doc);
 					newDoc.startReadings = $scope.startReadings;
