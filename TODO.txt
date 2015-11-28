@@ -2,3 +2,7 @@
 	- only one entry in each month can be set as startOfMonth
 * show startOfMonths in Search Tools > More Options as checkboxes
 	- add year filter: by year or all years
+	
+BUGS:
+* fix get summary (1 of 1 closed)
+	- include reading if present (closed)
