@@ -412,6 +412,7 @@
 				settings: settings,
 				syncDB: login,
 				put: function (doc, showFlash) {
+					showFlash = showFlash === undefined ? true : showFlash;
 					return db.put(doc, function(err) {
 						if (showFlash) {
 							if (err) {
@@ -458,6 +459,7 @@
 						.catch(util.reject);
 				},
 				delete: function (doc, showFlash) {
+					showFlash = showFlash === undefined ? true : showFlash;
 					return db.get(doc._id)
 						.then(function (doc) {
 							return db.remove(doc)
@@ -800,59 +802,77 @@
 			};
 			
 			$scope.settings = data.settings;
+			$scope.startReadings = data.settings.startReadings;
 			$scope.selectedStartReading = getStartReading();
-			
 			$scope.readingRange = {};
-			$scope.dateFrom = "";
+			
+			var settings = {
+				_id: 'settings-' + $cookies.get('guid'),
+				type: 'settings'
+			};
+		
+			getStartReadings();
 			
 			$scope.$on('scope.stored', function (event, storedData) {
 				$scope.$apply(function () {
 					switch (storedData.key) {
 						case 'dataLoaded-' + $cookies.get('guid'):
-							var startReadings = _.map($scope.docs.startOfMonth(),
-								function(doc) {
-									return { _id: doc._id, reading: doc.reading };
-								});
-								
-							var readings = [{ value: 'All', _id: 0 }];
-							
-							angular.forEach(startReadings, function(doc, index) {
-								var next = startReadings[index - 1];
-								readings.push({
-									value: String.format("{0} ({1})",
-										$filter('number')(doc.reading, 1), $filter('date')(doc._id, 'mediumDate')),
-									_id: doc._id,
-									dateFrom: $filter('date')(doc._id, 'mediumDate'),
-									dateTo: next ? $filter('date')(next._id, 'mediumDate') : '', 
-									startReading: doc.reading,
-									endReading: next ? next.reading : ''
-								});
-							});
-							
-							$scope.settings.startReadings = readings;
-							
-							$scope.selectedStartReading = getStartReading();
-							updateStartReadings();
-							updateFilters();
+							getStartReadings();
 							break;
 					}
 				});
 			});
 			
 			$scope.updateStartReading = function() {
-				
-				$scope.settings.startReading = $scope.selectedStartReading._id;
-				data.put($scope.settings).then(function (res) { }, function (err) { console.log(err); });
-				updateFilters();
+				var newDoc = {};
+				newDoc.startReading = $scope.selectedStartReading._id;
+				data.get(settings._id).then(function(doc) {
+					delete doc.startReading;
+					$.extend(newDoc, doc);
+					data.put(newDoc, false).then(function() {
+						updateFilters();
+					});
+				});
 			};
-
+			
+			function getStartReadings() {
+				var startReadings = _.map($scope.docs.startOfMonth(),
+					function(doc) {
+						return { _id: doc._id, reading: doc.reading };
+					}
+				);
+					
+				var readings = [{ value: 'All', _id: 0 }];
+				
+				angular.forEach(startReadings, function(doc, index) {
+					var next = startReadings[index - 1];
+					readings.push({
+						value: String.format("{0} ({1})",
+							$filter('number')(doc.reading, 1), $filter('date')(doc._id, 'mediumDate')),
+						_id: doc._id,
+						dateFrom: $filter('date')(doc._id, 'mediumDate'),
+						dateTo: next ? $filter('date')(next._id, 'mediumDate') : '', 
+						startReading: doc.reading,
+						endReading: next ? next.reading : ''
+					});
+				});
+				
+				$scope.startReadings = readings;
+				$scope.selectedStartReading = getStartReading();
+				updateStartReadings();
+				updateFilters();
+			}
+			
 			function getStartReading() {
-				var index = getIndex($scope.settings.startReadings, $scope.settings.startReading);
-				return $scope.settings.startReadings ? $scope.settings.startReadings[index] || $scope.settings.startReadings[0] : '';
+				var index = getIndex($scope.startReadings, $scope.settings.startReading);
+				return $scope.startReadings ? $scope.startReadings[index] || $scope.startReadings[0] : '';
 			}
 
 			function updateStartReadings() {
-				data.put($scope.settings).then(function (res) { }, function (err) { console.log(err); });
+				data.get(settings._id).then(function(doc) {
+					doc.startReadings = $scope.startReadings;
+					data.put(doc, true);
+				});
 			}
 			
 			function updateFilters() {
@@ -891,7 +911,6 @@
 						$scope.filteredDates.getIndexByReading($scope.readingRange.min) :
 						$scope.filteredDates[0];
 						
-					// end = $scope.dateTo ? $scope.filteredDates[$scope.filteredDates.length - 1] : $scope.docs[0];
 					if ($scope.dateTo && !$scope.readingRange.max) {
 						end = $scope.filteredDates[$scope.filteredDates.length - 1];
 					}
