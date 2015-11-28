@@ -226,6 +226,8 @@
 					}
 					
 					if (!settings.enableSync) {
+						if (sync) sync.cancel();
+						
 						Scopes.store('flashMessage', {
 							severity: 'info',
 							title: 'Info: ',
@@ -243,7 +245,7 @@
 			}
 
 			function syncDB() {
-				// console.log("sync");
+				console.log("sync");
 
 				var remoteCouchTemplate = 'http://{0}:{1}@{2}:5984/{3}';
 				var remoteCouch = String.format(remoteCouchTemplate, settings.username, settings.password, settings.server, settings.database);
@@ -274,7 +276,7 @@
 						console.log('denied', info);
 						// dbConnection = false;
 					}).on('complete', function (info) {
-						console.log(info);
+						// console.log(info);
 						// enableSync = true;
 						// dbConnection = true;
 						// Scopes.store('dbStatus', {
