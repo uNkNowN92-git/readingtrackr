@@ -3,28 +3,25 @@
   <header id="header">
   </header>
   <section id="summary">
-    <h2>Summary <small ng-bind-template="{{
-      (dateFrom || dateTo) ? '(Filtered by Date)' : ''
-    }}"></small></h2>
+    <select id="start-readings" ng-model="selectedStartReading"
+            ng-options="date.value for date in settings.startReadings"
+            ng-change="updateStartReading()"></select>
+    <h2>Summary</h2>
     <div id="summary-details">
       <dl class="summary">
-        <dt ng-show="dateFrom">Start Date</dt>
-        <dd ng-show="dateFrom" ng-bind="dateFrom"></dd>
-        <dt ng-show="dateTo">End Date</dt>
-        <dd ng-show="dateTo"ng-bind="dateTo"></dd>
         <dt>Start Reading</dt>
         <dd>
             <span ng-class="{'invalid': !startReading}"
                 ng-bind-template="{{startReading | number:1}} kWh"></span>
             <span class="datetime sm-left" ng-class="{'hidden': !startReading}"
-                ng-bind-template="({{startDateTime | date:'mediumDate'}})"></span>
+                ng-bind-template="({{dateFrom || startDateTime | date:'mediumDate'}})"></span>
         </dd>
         <dt>End Reading</dt>
         <dd>
             <span ng-class="{'invalid': !latestReading}"
             ng-bind-template="{{latestReading | number:1}} kWh"></span>
             <span class="datetime sm-left" ng-class="{'hidden': !latestReading}"
-                ng-bind-template="({{endDateTime | date:'mediumDate'}})"></span>
+                ng-bind-template="({{dateTo || endDateTime | date:'mediumDate'}})"></span>
         </dd>
         <dt>Current Usage</dt>
         <dd ng-class="{'invalid': !currentUsage}"

@@ -1,5 +1,5 @@
 <section id="todoapp" infinite-scroll='loadMore()' infinite-scroll-distance='0.5'>
-  <span class="entry-count" ng-pluralize count="todos.length" when="{1: '{} entry', 'other': '{} entries'}"></span>
+  <span class="entry-count" ng-pluralize count="docs.length" when="{1: '{} entry', 'other': '{} entries'}"></span>
   <header id="header">
     <form name="newReadingForm" ng-submit="newReadingForm.$valid && addNewDoc()">
       <input id="new-todo" ng-model="newReading" autocomplete="off" placeholder="What's the latest reading?" type="text" min="0" ng-focus="editingId = null"
@@ -9,7 +9,7 @@
   <section id="main">
     <ul id="todo-list">
       <form name="editForm" ng-submit="editReading(editingId)">
-        <li ng-repeat="doc in todos | limitTo:limit"
+        <li ng-repeat="doc in docs | limitTo:limit track by $index"
             ng-class="{'editing': editingId == doc._id, 'animate': editingId != doc._id, 'start-of-month': doc.startOfMonth}">
           <div class="view">
             <label hm-doubletap="beginEditing(doc._id, 'reading')" class="reading" ng-bind-template="{{doc.reading | number:1}}"></label>
@@ -28,7 +28,7 @@
         </li>
         <li>
           <div class="view">
-            <label class="load-more" ng-show="limit < todos.length"><img src="/img/ajax-loader.gif" alt="load-icon"> Loading more...</label>
+            <label class="load-more" ng-show="limit < docs.length"><img src="/img/ajax-loader.gif" alt="load-icon"> Loading more...</label>
           </div>
         </li>
         <input type="hidden" ng-model="index">

@@ -62,7 +62,7 @@
 			return {
 				store: function (key, value) {
 					key = suffixed(key);
-					$rootScope.$emit('scope.stored', { key: key, value: value });
+					$rootScope.$broadcast('scope.stored', { key: key, value: value });
 					mem[key] = value;
 				},
 				get: function (key) {
@@ -323,6 +323,7 @@
 						});
 						data.sort(compare);
 						$rootScope.$apply();
+						Scopes.store('dataLoaded', true);
 						login();
 					});
 			}
@@ -528,6 +529,8 @@
 					return docs;
 				},
 				getSummary: function (start, end) {
+					if (!start) return;
+					
 					var summary = {};
 					getSettings();
 
@@ -655,22 +658,22 @@
 		})
 
 		.controller('DataController', function ($scope, data, dataService, Scopes, $filter) {
-			$scope.todos = data.docs;
+			$scope.docs = data.docs;
 			$scope.focusReading = [];
 			$scope.focusDateTime = [];
 			$scope.editedReading = [];
 			$scope.editedDateTime = [];
 			$scope.editedStartOfMonth = [];
 			$scope.limit = 10;
-
+			
 			$scope.loadMore = function () {
-				if ($scope.limit < $scope.todos.length)
+				if ($scope.limit < $scope.docs.length)
 					$scope.limit += 10;
 			};
 
 			$scope.beginEditing = function (id, element) {
-				var index = getIndex($scope.todos, id);
-				var doc = $scope.todos[index];
+				var index = getIndex($scope.docs, id);
+				var doc = $scope.docs[index];
 				$scope.index = index;
 				$scope.focusReading[index] = element == 'reading';
 				$scope.focusDateTime[index] = element == 'dateTime';
@@ -708,7 +711,7 @@
 						}, function (err) { console.log(err); });
 					}
 					else if (updatedDoc.startOfMonth != doc.startOfMonth) {
-						var withSameMonth = $scope.todos.sameMonth(updatedDoc._id);
+						var withSameMonth = $scope.docs.sameMonth(updatedDoc._id);
 						var previousStartOfMonth = withSameMonth.startOfMonth();
 						
 						angular.forEach(previousStartOfMonth, function(entry) {
@@ -788,14 +791,77 @@
 			});
 		})
 
-		.controller('SummaryController', function ($scope, data, Scopes, dataService, $filter) {
+		.controller('SummaryController', function ($scope, $cookies, data, Scopes, dataService, $filter) {
 			$scope.docs = data.docs;
 			$scope.limit = 10;
 
 			$scope.resetLimit = function() {
 				$scope.limit = 10;
 			};
+			
+			$scope.settings = data.settings;
+			$scope.selectedStartReading = getStartReading();
+			
+			$scope.readingRange = {};
+			$scope.dateFrom = "";
+			
+			$scope.$on('scope.stored', function (event, storedData) {
+				$scope.$apply(function () {
+					switch (storedData.key) {
+						case 'dataLoaded-' + $cookies.get('guid'):
+							var startReadings = _.map($scope.docs.startOfMonth(),
+								function(doc) {
+									return { _id: doc._id, reading: doc.reading };
+								});
+								
+							var readings = [{ value: 'All', _id: 0 }];
+							
+							angular.forEach(startReadings, function(doc, index) {
+								var next = startReadings[index - 1];
+								readings.push({
+									value: String.format("{0} ({1})",
+										$filter('number')(doc.reading, 1), $filter('date')(doc._id, 'mediumDate')),
+									_id: doc._id,
+									dateFrom: $filter('date')(doc._id, 'mediumDate'),
+									dateTo: next ? $filter('date')(next._id, 'mediumDate') : '', 
+									startReading: doc.reading,
+									endReading: next ? next.reading : ''
+								});
+							});
+							
+							$scope.settings.startReadings = readings;
+							
+							$scope.selectedStartReading = getStartReading();
+							updateStartReadings();
+							updateFilters();
+							break;
+					}
+				});
+			});
+			
+			$scope.updateStartReading = function() {
+				
+				$scope.settings.startReading = $scope.selectedStartReading._id;
+				data.put($scope.settings).then(function (res) { }, function (err) { console.log(err); });
+				updateFilters();
+			};
 
+			function getStartReading() {
+				var index = getIndex($scope.settings.startReadings, $scope.settings.startReading);
+				return $scope.settings.startReadings ? $scope.settings.startReadings[index] || $scope.settings.startReadings[0] : '';
+			}
+
+			function updateStartReadings() {
+				data.put($scope.settings).then(function (res) { }, function (err) { console.log(err); });
+			}
+			
+			function updateFilters() {
+				$scope.readingRange.min = $scope.selectedStartReading.startReading || "";
+				$scope.readingRange.max = $scope.selectedStartReading.endReading || "";
+				$scope.dateFrom = $scope.selectedStartReading.dateFrom || "";
+				$scope.dateTo = $scope.selectedStartReading.dateTo || "";
+			}
+			
 			$scope.loadMore = function (override, limit) {
 				if (limit) $scope.limit = limit;
 				else {
@@ -818,11 +884,24 @@
 			$scope.getSummary = function () {
 				var end, start, summary;
 				
-				if ($scope.dateFrom || $scope.dateTo) {
+				if ($scope.dateFrom || $scope.dateTo || $scope.readingRange) {
 					if ($.isEmptyObject($scope.filteredDates)) return;
-	
-					start = $scope.filteredDates[0];
-					end = $scope.dateTo ? $scope.filteredDates[$scope.filteredDates.length - 1] : $scope.docs[0];
+					
+					start = $scope.readingRange.min ?
+						$scope.filteredDates.getIndexByReading($scope.readingRange.min) :
+						$scope.filteredDates[0];
+						
+					// end = $scope.dateTo ? $scope.filteredDates[$scope.filteredDates.length - 1] : $scope.docs[0];
+					if ($scope.dateTo && !$scope.readingRange.max) {
+						end = $scope.filteredDates[$scope.filteredDates.length - 1];
+					}
+					else if ($scope.readingRange.max) {
+						end = $scope.docs.getIndexByReading($scope.readingRange.max);
+					}
+					else {
+						end = $scope.docs[0];
+					}
+					
 					summary = dataService.getSummary(start, end);
 				} else {
 					if ($.isEmptyObject($scope.docs)) return;
@@ -1018,9 +1097,12 @@
 		}
 		return s;
 	};
+	Array.prototype.getIndexByReading = function (value) {
+		return _.map(_.where(this, { 'reading': value }))[0];
+	};
 	
 	Array.prototype.startOfMonth = function () {
-		return _.map(_.where(this, {'startOfMonth': true}));
+		return _.map(_.where(this, { 'startOfMonth': true }));
 	};
 
 	Array.prototype.sameMonth = function (id) {
@@ -1039,6 +1121,7 @@
 	}
 
 	function getIndex(data, docId) {
+		if (!data) return;
 		var indexes = $.map(data, function (obj, index) {
 			if (obj._id == docId) {
 				return index;

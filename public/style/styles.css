@@ -1084,6 +1084,7 @@ button {
 }
 
 a:focus,
+select:focus,
 input[type=checkbox]:focus,
 button:focus {
   outline: 0;
@@ -1980,6 +1981,10 @@ p.footer-text.ng-binding {
   color: #afafaf;
   text-align: center;
   font-size: 0.9em;
+}
+
+#summary #start-readings {
+  float: right;
 }
 
 #summary-details {
