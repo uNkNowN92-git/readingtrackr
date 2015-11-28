@@ -418,6 +418,7 @@
 					return db.put(doc, function(err) {
 						if (showFlash) {
 							if (err) {
+								console.log(err, doc);
 								var errorMessage;
 								switch (err.name) {
 									case 'conflict':
@@ -429,7 +430,7 @@
 										}
 										break;
 									default:
-										errorMessage = 'Entry already exists.';
+										errorMessage = 'Something wrong happened.';
 										break;
 								}
 								Scopes.store('flashMessage', { title: 'Error!', message: errorMessage, severity: 'danger', pause: true, repeat: true });
@@ -717,7 +718,7 @@
 
 				data.get(docId).then(function (doc) {
 					if (updatedDoc._id != doc._id) {
-						data.delete(doc).catch(function (reason) { console.log(reason); });
+						data.delete(doc, false).catch(function (reason) { console.log(reason); });
 						var newDoc = { type: 'reading' };
 						$.extend(newDoc, updatedDoc);
 						data.put(newDoc).then(function (res) { 
@@ -844,11 +845,13 @@
 			$scope.updateStartReading = function() {
 				var newDoc = {};
 				newDoc.startReading = $scope.selectedStartReading._id;
+				$.extend(newDoc, settings);
 				data.get(settings._id).then(function(doc) {
 					delete doc.startReading;
 					$.extend(newDoc, doc);
 					data.put(newDoc, false).then(function() {
 						updateFilters();
+						$scope.$apply();
 					});
 				});
 			};
@@ -904,10 +907,11 @@
 
 			function updateStartReadings() {
 				var newDoc = {};
+				$.extend(newDoc, settings);
 				data.get(settings._id).then(function(doc) {
 					$.extend(newDoc, doc);
 					newDoc.startReadings = $scope.startReadings;
-					data.put(newDoc, true);
+					data.put(newDoc, false);
 				});
 			}
 			
