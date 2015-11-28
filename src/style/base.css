@@ -390,11 +390,11 @@ label[for='toggle-all'] {
 }
 
 #todo-list li.start-of-month .destroy {
-  right: 30px;
+  right: 33px;
 }
 
 #todo-list li .destroy {
-  right: 0;
+  right: 3px;
   color: #ADADAD;;
   font-size: 1em;
 }
@@ -407,7 +407,7 @@ label[for='toggle-all'] {
 
 #todo-list li.editing .start-of-month {
   display: block;
-  right: -1px;
+  right: 3px;
   line-height: 44px;
   color: #d9d9d9;
 }
@@ -417,7 +417,7 @@ label[for='toggle-all'] {
   position: absolute;
   top: 1px;
   bottom: 0;
-  right: -1px;
+  right: 3px;
   color: #FFE710;
   text-shadow: 0 0px 3px #AAAAAA;
 }
