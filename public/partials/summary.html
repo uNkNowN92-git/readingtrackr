@@ -10,16 +10,14 @@
     <div id="summary-details">
       <dl class="summary">
         <dt>Start Reading</dt>
-        <dd>
-            <span ng-class="{'invalid': !startReading}"
-                ng-bind-template="{{startReading | number:1}} kWh"></span>
+        <dd ng-class="{'invalid': !startReading}">
+            <span ng-bind-template="{{startReading | number:1}} kWh"></span>
             <span class="datetime sm-left" ng-class="{'hidden': !startReading}"
                 ng-bind-template="({{dateFrom || startDateTime | date:'mediumDate'}})"></span>
         </dd>
         <dt>End Reading</dt>
-        <dd>
-            <span ng-class="{'invalid': !latestReading}"
-            ng-bind-template="{{latestReading | number:1}} kWh"></span>
+        <dd ng-class="{'invalid': !latestReading}">
+            <span ng-bind-template="{{latestReading | number:1}} kWh"></span>
             <span class="datetime sm-left" ng-class="{'hidden': !latestReading}"
                 ng-bind-template="({{dateTo || endDateTime | date:'mediumDate'}})"></span>
         </dd>
