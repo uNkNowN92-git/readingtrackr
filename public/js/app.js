@@ -418,7 +418,7 @@
 					return db.put(doc, function(err) {
 						if (showFlash) {
 							if (err) {
-								console.log(err, doc);
+								//console.log(err, doc);
 								var errorMessage;
 								switch (err.name) {
 									case 'conflict':
