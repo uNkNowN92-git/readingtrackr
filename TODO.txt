@@ -1,3 +1,13 @@
+git clone
+
+what worked for me was to generate the keys using Git Bash
+
+ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+and then add the key to ssh-agent as described here
+
+https://help.github.com/articles/generating-a-new-ssh-key/
+
+
 * use startOfMonth as the default start reading
 	- only one entry in each month can be set as startOfMonth
 * show startOfMonths in Search Tools > More Options as checkboxes
