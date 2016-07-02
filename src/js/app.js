@@ -932,13 +932,23 @@
 			
 			$scope.downloadResultJson = function() {
 				//console.log(JSON.stringify($scope.filteredReadings));
-				//var limit = $scope.limit;
-				
-				
-				//$scope.limit = $scope.filteredReadings.length;
+				var limit = Number($scope.limit);
+
+				var readings = $scope.filteredReadings;
+				var data = "text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(readings));
+
+				var $downloadLink = $('#download-link');
+				$downloadLink
+					.attr('href', "data:'" + data)
+					.attr('download', "readings.json");
+					
+				$downloadLink[0].click();
+				// $('<a href="data:' + data + '" download="readings.json">download JSON</a>').appendTo('#container');
+
+				$scope.limit = $scope.filteredReadings.length;
 				//console.log($scope.limit);
 				//console.log($('#table-summary').html());
-				//$scope.limit = limit;
+				$scope.limit = limit;
 			};
 
 			$scope.getSummary = function () {
