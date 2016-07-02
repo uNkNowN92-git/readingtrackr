@@ -991,8 +991,9 @@
 						'download': filename
                         , 'href': csvData
                         //,'target' : '_blank' //if you want it to open in a new window
-					}).click();
-
+					});
+					
+				$('#download-link')[0].click();
                 //------------------------------------------------------------
                 // Helper Functions 
                 //------------------------------------------------------------

@@ -26,7 +26,7 @@
 					templateUrl: 'partials/settings.html',
 					controller: 'MainController'
 				})
-			;
+				;
 		}])
 
 		.run(["$rootScope", "$state", "$stateParams", "$cookies", "data", function ($rootScope, $state, $stateParams, $cookies, data) {
@@ -34,17 +34,17 @@
 			if (!id) {
 				$cookies.put('guid', guid());
 			}
-			
+
 			function guid() {
 				function s4() { return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1); }
 				return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
 			}
-			
+
 			$rootScope.$state = $state;
-    	$rootScope.$stateParams = $stateParams; 
-			
+			$rootScope.$stateParams = $stateParams;
+
 			$rootScope.$on('$stateChangeSuccess',
-				function(event, toState, toParams, fromState, fromParams) {
+				function (event, toState, toParams, fromState, fromParams) {
 					// $rootScope.$state.current = toState;
 					$rootScope.$state.previous = fromState;
 					// console.log($rootScope.$state.previous);
@@ -90,43 +90,43 @@
 				} else return null;
 			};
 		}])
-		
-		.filter("dateFilter", function() {
-			return function(items, from, to) {
+
+		.filter("dateFilter", function () {
+			return function (items, from, to) {
 				if (!from && !to) return items;
-				
+
 				var df = new Date(from) || new Date();
 				var dt = new Date(to) || new Date();
 				var arrayToReturn = [];
-				
+
 				df = moment(df.getTime()).toDate().valueOf();
 				dt = moment(dt.getTime()).add(1, 'days').toDate().valueOf();
-				
-				for (var i=0; i<items.length; i++){
-						var dateTime = parseInt(items[i]._id);
-						
-						if (dateTime >= df)  {
-							if (!dt || (dt && dateTime <= dt))
-								arrayToReturn.push(items[i]);
-						} else if (dateTime <= dt) {
-							if (!df || (df && dateTime >= df))
-								arrayToReturn.push(items[i]);
-						}
+
+				for (var i = 0; i < items.length; i++) {
+					var dateTime = parseInt(items[i]._id);
+
+					if (dateTime >= df) {
+						if (!dt || (dt && dateTime <= dt))
+							arrayToReturn.push(items[i]);
+					} else if (dateTime <= dt) {
+						if (!df || (df && dateTime >= df))
+							arrayToReturn.push(items[i]);
+					}
 				}
 				return arrayToReturn;
 			};
 		})
-		
-		.filter('rangeFilter', function() {
-			return function( items, range ) {
+
+		.filter('rangeFilter', function () {
+			return function (items, range) {
 				if (!range) return items;
-				
+
 				var filtered = [];
 				var min = parseFloat(range.min || 0);
 				var max = parseFloat(range.max) || (items.length ? Math.max.apply(null, _.pluck(items, 'reading')) : false);
-				
-				angular.forEach(items, function(item) {					
-					if( item.reading >= min && (!max || item.reading <= max ))  {
+
+				angular.forEach(items, function (item) {
+					if (item.reading >= min && (!max || item.reading <= max)) {
 						filtered.push(item);
 					}
 				});
@@ -194,7 +194,7 @@
 				var remoteDB = new PouchDB(remoteCouch, pouchOpts);
 				remoteDB.login(user.name, user.password, ajaxOpts, function (err, response) {
 					// console.log('login');
-					
+
 					if (err) {
 						var errorMessage;
 						switch (err.status) {
@@ -207,10 +207,12 @@
 						}
 						//alert(String.format("Error! {0}", errorMessage));
 						if (settings.enableSync || settings.server && settings.database)
-							Scopes.store('flashMessage', { severity: 'danger',
+							Scopes.store('flashMessage', {
+								severity: 'danger',
 								title: String.format('Error {0}!', err.status),
-								message: String.format('{0}<br>{1}', errorMessage, err.message) });
-						
+								message: String.format('{0}<br>{1}', errorMessage, err.message)
+							});
+
 						Scopes.store('dbStatus', {
 							// enableSync: true,
 							dbConnection: false
@@ -224,17 +226,18 @@
 
 						Scopes.store('userRoles', roles);
 					}
-					
+
 					if (!settings.enableSync) {
 						if (sync) sync.cancel();
-						
+
 						Scopes.store('flashMessage', {
 							severity: 'info',
 							title: 'Info: ',
-							message: 'You can now sync your data to the server.' });
-						
+							message: 'You can now sync your data to the server.'
+						});
+
 						//$rootScope.$apply(function () {
-							//dbConnection = true;
+						//dbConnection = true;
 						//});
 						Scopes.store('dbStatus', {
 							dbConnection: true
@@ -264,13 +267,13 @@
 							// enableSync: false,
 							dbConnection: dbConnection
 						});
-						Scopes.store('flashMessage', {title: 'Success!', message: 'Database sync successful.', severity: 'success', append: true });
-						
+						Scopes.store('flashMessage', { title: 'Success!', message: 'Database sync successful.', severity: 'success', append: true });
+
 						// console.log('paused');
 					}).on('active', function () {
 						// console.log('active');
-						Scopes.store('flashMessage', {title: '', message: 'Syncing...', severity: 'info', append: true });
-						
+						Scopes.store('flashMessage', { title: '', message: 'Syncing...', severity: 'info', append: true });
+
 						// dbConnection = true;
 					}).on('denied', function (info) {
 						console.log('denied', info);
@@ -395,7 +398,7 @@
 						// if (newDoc.reading) {
 						// 	newDoc.type = 'reading';
 						// 	//tempDocs.push(newDoc);
-							
+
 						// 	db.put(newDoc).then(function(res) {
 						// 		console.log(res);
 						// 	}).catch(function(err) {
@@ -415,7 +418,7 @@
 				syncDB: login,
 				put: function (doc, showFlash) {
 					showFlash = showFlash === undefined ? true : showFlash;
-					return db.put(doc, function(err) {
+					return db.put(doc, function (err) {
 						if (showFlash) {
 							if (err) {
 								//console.log(err, doc);
@@ -425,7 +428,7 @@
 										if (doc.type == 'reading') {
 											errorMessage = String.format('An entry with same date and time <span class="no-wrap"><b>({0})</b></span> already exists.',
 												moment(parseInt(doc._id)).format('MMM D, YYYY h:mm A'));
-										} else{
+										} else {
 											errorMessage = 'Entry already exists.';
 										}
 										break;
@@ -451,8 +454,8 @@
 							}
 						}
 					})
-					.then(util.resolve)
-					.catch(util.reject);
+						.then(util.resolve)
+						.catch(util.reject);
 				},
 				get: function (docId) {
 					return db.get(docId)
@@ -466,7 +469,7 @@
 					return db.get(doc._id)
 						.then(function (doc) {
 							return db.remove(doc)
-								.then(function() {
+								.then(function () {
 									if (showFlash) {
 										var message = "";
 										switch (doc.type) {
@@ -488,15 +491,15 @@
 			};
 		}])
 
-		.service('flashMessage', ["Flash", "$timeout", function(Flash, $timeout){
+		.service('flashMessage', ["Flash", "$timeout", function (Flash, $timeout) {
 			return {
-				create: function(flash) {
+				create: function (flash) {
 					Flash.dismiss();
-					$timeout(function() {
-						Flash.create(flash.severity, '<strong>'+ flash.title + '</strong>&nbsp;&nbsp;' + flash.message, flash.class);
+					$timeout(function () {
+						Flash.create(flash.severity, '<strong>' + flash.title + '</strong>&nbsp;&nbsp;' + flash.message, flash.class);
 					}, 100);
 				},
-				pause: function() {
+				pause: function () {
 					Flash.pause();
 				}
 			};
@@ -537,7 +540,7 @@
 				},
 				getSummary: function (start, end) {
 					if (!start) return;
-					
+
 					var summary = {};
 					getSettings();
 
@@ -574,20 +577,20 @@
 			// 	//console.log(pageTitle);
 			// 	//$scope.title = pageTitle ? pageTitle + " | " + $scope.appName : $scope.appName;
 			// }
-						
+
 			var currentYear = new Date().getFullYear();
 			var copyrightYears = currentYear != 2015 ? 2015 + " - " + currentYear : 2015;
 			$scope.footerText = String.format("© {0} Electricity Reading Trackr App | uNkNowN92", copyrightYears);
 
 			$scope.settings = data.settings;
-			
+
 			$scope.syncDB = function () {
 				toggleDbSync();
 			};
 
 			function toggleDbSync() {
 				$scope.settings.enableSync = !$scope.settings.enableSync;
-				
+
 				data.put($scope.settings).then(function (res) {
 					data.get(settings._id).then(function (doc) {
 						$scope.$apply(function () {
@@ -595,9 +598,9 @@
 							$scope.settings = data.settings;
 						});
 						if ($scope.settings.enableSync)
-							Scopes.store('flashMessage', {title: '', message: 'Database sync started.', severity: 'info'});
+							Scopes.store('flashMessage', { title: '', message: 'Database sync started.', severity: 'info' });
 						else
-							Scopes.store('flashMessage', {title: '', message: 'Stopping database sync...', severity: 'info'});
+							Scopes.store('flashMessage', { title: '', message: 'Stopping database sync...', severity: 'info' });
 					});
 				}, function (err) { console.log(err); });
 			}
@@ -609,7 +612,7 @@
 						case 'dbStatus-' + $cookies.get('guid'):
 							$scope.dbConnection = storedData.value.dbConnection;
 
-							if(!$scope.dbConnection && $scope.settings.enableSync)
+							if (!$scope.dbConnection && $scope.settings.enableSync)
 								toggleDbSync();
 
 							break;
@@ -619,7 +622,7 @@
 								title: storedData.value.title,
 								message: storedData.value.message
 							};
-							
+
 							// if (storedData.value.append) {
 							// 	var messages = [];
 							// 	if ($scope.previousFlash.message)
@@ -628,8 +631,8 @@
 							// 		messages.push(obj.message);
 							// 	obj.message = messages.join('<br>');
 							// }
-							
-							if(!_.isEqual(obj, $scope.previousFlash) || storedData.value.repeat) {
+
+							if (!_.isEqual(obj, $scope.previousFlash) || storedData.value.repeat) {
 								flashMessage.create(obj);
 								if (storedData.value.pause)
 									flashMessage.pause();
@@ -654,7 +657,7 @@
 							$.extend(data.settings, doc);
 							$scope.settings = data.settings;
 						});
-						Scopes.store('flashMessage', {title: 'Success!', message: 'Settings saved successfully!', severity: 'success'});
+						Scopes.store('flashMessage', { title: 'Success!', message: 'Settings saved successfully!', severity: 'success' });
 					});
 				}, function (err) { console.log(err); });
 			};
@@ -671,7 +674,7 @@
 							$scope.settings = data.settings;
 							$scope.settingsForm.$setPristine();
 						});
-						Scopes.store('flashMessage', {title: 'Success!', message: 'Settings cleared successfully!', severity: 'success'});
+						Scopes.store('flashMessage', { title: 'Success!', message: 'Settings cleared successfully!', severity: 'success' });
 					});
 				}).catch(function (err) { console.log(err); });
 			};
@@ -686,7 +689,7 @@
 			$scope.editedDateTime = [];
 			$scope.editedStartOfMonth = [];
 			$scope.limit = 10;
-			
+
 			$scope.loadMore = function () {
 				if ($scope.limit < $scope.docs.length)
 					$scope.limit += 10;
@@ -702,7 +705,7 @@
 				$scope.editedReading[index] = parseFloat(doc.reading).toFixed(1);
 				$scope.editedDateTime[index] = $filter('date')(doc._id, 'mediumDate') + " " + $filter('date')(doc._id, 'shortTime');
 				$scope.editedStartOfMonth[index] = doc.startOfMonth ? true : '';
-				
+
 				$.datetimepicker.setLocale('en');
 				$('#' + id).datetimepicker({ format: 'M j, Y h:i A', step: 15, value: new Date(parseInt(doc._id)) });
 			};
@@ -721,7 +724,7 @@
 						data.delete(doc, false).catch(function (reason) { console.log(reason); });
 						var newDoc = { type: 'reading' };
 						$.extend(newDoc, updatedDoc);
-						data.put(newDoc).then(function (res) { 
+						data.put(newDoc).then(function (res) {
 							resetEditedItem(index);
 						}, function (err) { console.log(err); });
 					}
@@ -734,12 +737,12 @@
 					else if (updatedDoc.startOfMonth != doc.startOfMonth) {
 						var withSameMonth = $scope.docs.sameMonth(updatedDoc._id);
 						var previousStartOfMonth = withSameMonth.startOfMonth();
-						
-						angular.forEach(previousStartOfMonth, function(entry) {
+
+						angular.forEach(previousStartOfMonth, function (entry) {
 							entry.startOfMonth = false;
 							data.put(entry, false).then(function (res) { }, function (err) { console.log(err); });
 						});
-						
+
 						$.extend(doc, updatedDoc);
 						data.put(doc).then(function (res) {
 							resetEditedItem(index);
@@ -749,7 +752,7 @@
 					}
 				});
 			};
-			
+
 			function resetEditedItem(index) {
 				$scope.editedReading[index] = null;
 				$scope.editedDateTime[index] = null;
@@ -757,12 +760,12 @@
 				closeDateTimePicker();
 				$scope.$apply();
 			}
-			
+
 			function closeDateTimePicker() {
 				$('.xdsoft_datetimepicker').fadeOut();
 			}
-			
-			$scope.closeDateTimePicker = function() {
+
+			$scope.closeDateTimePicker = function () {
 				closeDateTimePicker();
 			};
 
@@ -786,16 +789,16 @@
 					console.log(err);
 				});
 
-			// };
+				// };
 			};
 
 
 			$scope.deleteDoc = function (doc) {
-				if(confirm("Are you sure you want to delete this entry?"))
-				data.delete(doc, true)
-					.catch(function (reason) {
-						console.log(reason);
-					});
+				if (confirm("Are you sure you want to delete this entry?"))
+					data.delete(doc, true)
+						.catch(function (reason) {
+							console.log(reason);
+						});
 			};
 
 			function removeSeconds(dateTime) {
@@ -803,7 +806,7 @@
 				dateTime = $filter('date')(dateTime, 'mediumDate') + " " + $filter('date')(dateTime, 'shortTime');
 				return new Date(dateTime).getTime().toString();
 			}
-			
+
 			$scope.windowWidth = window.innerWidth;
 			$(window).resize(function () {
 				$scope.$apply(function () {
@@ -816,22 +819,22 @@
 			$scope.docs = data.docs;
 			$scope.limit = 10;
 
-			$scope.resetLimit = function() {
+			$scope.resetLimit = function () {
 				$scope.limit = 10;
 			};
-			
+
 			$scope.settings = data.settings;
 			$scope.startReadings = data.settings.startReadings;
 			$scope.selectedStartReading = getStartReading();
 			$scope.readingRange = {};
-			
+
 			var settings = {
 				_id: 'settings-' + $cookies.get('guid'),
 				type: 'settings'
 			};
-		
+
 			getStartReadings();
-			
+
 			$scope.$on('scope.stored', function (event, storedData) {
 				$scope.$apply(function () {
 					switch (storedData.key) {
@@ -841,53 +844,53 @@
 					}
 				});
 			});
-			
-			$scope.updateStartReading = function() {
+
+			$scope.updateStartReading = function () {
 				var newDoc = {};
 				newDoc.startReading = $scope.selectedStartReading._id;
 				$.extend(newDoc, settings);
-				data.get(settings._id).then(function(doc) {
+				data.get(settings._id).then(function (doc) {
 					delete doc.startReading;
 					$.extend(newDoc, doc);
-					data.put(newDoc, false).then(function() {
+					data.put(newDoc, false).then(function () {
 						updateFilters();
 						$scope.$apply();
 					});
 				});
 			};
-			
+
 			function getStartReadings() {
 				var startReadings = _.map($scope.docs.startOfMonth(),
-					function(doc) {
+					function (doc) {
 						return { _id: doc._id, reading: doc.reading };
 					}
 				);
-					
+
 				var readings = [{ value: 'All', _id: 0 }];
-				
-				angular.forEach(startReadings, function(doc, index) {
+
+				angular.forEach(startReadings, function (doc, index) {
 					var next = startReadings[index - 1];
 					var obj = {
 						value: String.format("{0} ({1})",
 							$filter('number')(doc.reading, 1), $filter('date')(doc._id, 'mediumDate')),
 						_id: doc._id,
 						dateFrom: $filter('date')(doc._id, 'mediumDate'),
-						dateTo: next ? $filter('date')(next._id, 'mediumDate') : '', 
+						dateTo: next ? $filter('date')(next._id, 'mediumDate') : '',
 						startReading: doc.reading,
 						endReading: next ? next.reading : ''
 					};
-						readings.push(obj);
+					readings.push(obj);
 				});
-				
+
 				if (isStartReadingsChanged(readings)) {
 					$scope.startReadings = readings;
 					updateStartReadings();
 				}
-					
+
 				$scope.selectedStartReading = getStartReading();
 				updateFilters();
 			}
-			
+
 			function isStartReadingsChanged(readings) {
 				if (!$scope.startReadings) return true;
 				var changed = false;
@@ -895,11 +898,11 @@
 					var value = readings[key];
 					var oldCopy = $scope.startReadings[key] || {};
 					delete oldCopy.$$hashKey;
-					if (!_.isEqual(value, oldCopy)) {	changed = true; break; }
+					if (!_.isEqual(value, oldCopy)) { changed = true; break; }
 				}
 				return changed;
 			}
-			
+
 			function getStartReading() {
 				var index = getIndex($scope.startReadings, $scope.settings.startReading);
 				return $scope.startReadings ? $scope.startReadings[index] || $scope.startReadings[0] : '';
@@ -908,20 +911,20 @@
 			function updateStartReadings() {
 				var newDoc = {};
 				$.extend(newDoc, settings);
-				data.get(settings._id).then(function(doc) {
+				data.get(settings._id).then(function (doc) {
 					$.extend(newDoc, doc);
 					newDoc.startReadings = $scope.startReadings;
 					data.put(newDoc, false);
 				});
 			}
-			
+
 			function updateFilters() {
 				$scope.readingRange.min = $scope.selectedStartReading.startReading || "";
 				$scope.readingRange.max = $scope.selectedStartReading.endReading || "";
 				$scope.dateFrom = $scope.selectedStartReading.dateFrom || "";
 				$scope.dateTo = $scope.selectedStartReading.dateTo || "";
 			}
-			
+
 			$scope.loadMore = function (override, limit) {
 				if (limit) $scope.limit = limit;
 				else {
@@ -929,8 +932,8 @@
 						$scope.limit += 10;
 				}
 			};
-			
-		$scope.downloadResultJson = function () {
+
+			$scope.downloadResultJson = function () {
 				//console.log(JSON.stringify($scope.filteredReadings));
 				var limit = Number($scope.limit);
 
@@ -988,8 +991,9 @@
 						'download': filename
                         , 'href': csvData
                         //,'target' : '_blank' //if you want it to open in a new window
-					}).click();
+					});
 					
+				$('#download-link')[0].click();
                 //------------------------------------------------------------
                 // Helper Functions 
                 //------------------------------------------------------------
@@ -1019,14 +1023,14 @@
 
 			$scope.getSummary = function () {
 				var end, start, summary;
-				
+
 				if ($scope.dateFrom || $scope.dateTo || $scope.readingRange) {
 					if ($.isEmptyObject($scope.filteredDates)) return;
-					
+
 					start = $scope.readingRange.min ?
 						$scope.filteredDates.getIndexByReading($scope.readingRange.min) :
 						$scope.filteredDates[0];
-						
+
 					if ($scope.dateTo && !$scope.readingRange.max) {
 						end = $scope.filteredDates[$scope.filteredDates.length - 1];
 					}
@@ -1036,11 +1040,11 @@
 					else {
 						end = $scope.docs[0];
 					}
-					
+
 					summary = dataService.getSummary(start, end);
 				} else {
 					if ($.isEmptyObject($scope.docs)) return;
-					
+
 					start = $scope.docs[$scope.docs.length - 1];
 					end = $scope.docs[0];
 					summary = dataService.getSummary(start, end);
@@ -1057,8 +1061,8 @@
 				});
 			});
 		}])
-		
-		.directive('datetimePicker', ["$timeout", function($timeout) {
+
+		.directive('datetimePicker', ["$timeout", function ($timeout) {
 			return {
 				restrict: 'A',
 				link: function (scope, element, attrs) {
@@ -1082,7 +1086,7 @@
 							break;
 					}
 					$.extend(opts, extraOpts);
-					$('[datetime-picker=\"'+attrs.datetimePicker+'\"]').datetimepicker(opts);
+					$('[datetime-picker=\"' + attrs.datetimePicker + '\"]').datetimepicker(opts);
 				}
 			};
 		}])
@@ -1094,7 +1098,7 @@
 				controller: 'MainController'
 			};
 		})
-		
+
 		.directive('copyright', function () {
 			return {
 				restrict: 'E',
@@ -1106,9 +1110,9 @@
 		.directive('notification', ["$timeout", function ($timeout) {
 			return {
 				restrict: 'E',
-				template:"<div class='alert alert-{{alertData.type}}' ng-show='alertData.message' role='alert' data-notification='{{alertData.status}}'>{{alertData.message}}</div>",
-				scope:{
-					alertData:"="
+				template: "<div class='alert alert-{{alertData.type}}' ng-show='alertData.message' role='alert' data-notification='{{alertData.status}}'>{{alertData.message}}</div>",
+				scope: {
+					alertData: "="
 				}
 			};
 		}])
@@ -1166,7 +1170,7 @@
 				}
 			};
 		}])
-		
+
 		.directive('onShow', function () {
 			// TODO
 			// return {
@@ -1186,14 +1190,14 @@
 		})
 
 		// .directive('whenScrollEnds', function() {
-	//     return {
-	//       restrict: "A",
-	//       link: function(scope, element, attrs) {
-	//       	//console.log(scope, element, attrs.whenScrollEnds);
-	//         var windowHeight = $(window.top).height();;
-	//         var threshold = 100;
+		//     return {
+		//       restrict: "A",
+		//       link: function(scope, element, attrs) {
+		//       	//console.log(scope, element, attrs.whenScrollEnds);
+		//         var windowHeight = $(window.top).height();;
+		//         var threshold = 100;
 
-	//         function getVisible() {    
+		//         function getVisible() {    
 		// 			    var $el = element,
 		// 			        scrollTop = $(this).scrollTop(),
 		// 			        scrollBot = scrollTop + $(this).height(),
@@ -1206,20 +1210,20 @@
 		// 			}
 
 		// 			$(window).on('scroll resize', getVisible);
-	//         // console.log(element.scroll());
-	//         // $(document).scroll(function() {
-	//         //   var scrollableHeight = $(document).height();
-	//         //   var hiddenContentHeight = scrollableHeight - visibleHeight;
-	//         // 	console.log(visibleHeight, scrollableHeight, hiddenContentHeight);
+		//         // console.log(element.scroll());
+		//         // $(document).scroll(function() {
+		//         //   var scrollableHeight = $(document).height();
+		//         //   var hiddenContentHeight = scrollableHeight - visibleHeight;
+		//         // 	console.log(visibleHeight, scrollableHeight, hiddenContentHeight);
 
-	//         //   if (hiddenContentHeight - element.scrollTop() <= threshold) {
-	//         //     // Scroll is almost at the bottom. Loading more rows
-	//         //     scope.$apply(attrs.whenScrollEnds);
-	//         //   }
-	//         // });
-	//       }
-	//     };
-	//   })
+		//         //   if (hiddenContentHeight - element.scrollTop() <= threshold) {
+		//         //     // Scroll is almost at the bottom. Loading more rows
+		//         //     scope.$apply(attrs.whenScrollEnds);
+		//         //   }
+		//         // });
+		//       }
+		//     };
+		//   })
 		;
 
 	// Helpers
@@ -1235,7 +1239,7 @@
 	Array.prototype.getIndexByReading = function (value) {
 		return _.map(_.where(this, { 'reading': value }))[0];
 	};
-	
+
 	Array.prototype.startOfMonth = function () {
 		return _.map(_.where(this, { 'startOfMonth': true }));
 	};
@@ -1246,7 +1250,7 @@
 		var startDate = moment([year, month]).toDate().valueOf();
 		var endDate = moment(startDate).endOf('month').toDate().valueOf();
 
-		return _.filter(this, function(e) {
+		return _.filter(this, function (e) {
 			return e._id >= startDate && e._id <= endDate && e._id != id;
 		});
 	};
