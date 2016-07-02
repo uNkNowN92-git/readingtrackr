@@ -20,6 +20,7 @@ font/glyphicons-halflings-regular.ttf
 
 js/applib.min.js
 js/app.min.js
+js/app.js
 
 img/bg.png
 img/ajax-loader.gif
