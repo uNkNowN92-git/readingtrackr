@@ -992,7 +992,7 @@
                         , 'href': csvData
                         //,'target' : '_blank' //if you want it to open in a new window
 					});
-					
+
 				$('#download-link')[0].click();
                 //------------------------------------------------------------
                 // Helper Functions 
@@ -1008,7 +1008,7 @@
 
                     var $row = $(row);
                     //for some reason $cols = $row.find('td') || $row.find('th') won't work...
-                    var $cols = $row.find('td');
+                    var $cols = $row.find('td:not(.no-export)');
                     if (!$cols.length) $cols = $row.find('th');
                     return $cols.map(grabCol)
 						.get().join(tmpColDelim);
