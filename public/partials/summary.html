@@ -100,10 +100,7 @@
               ng-init="doc.date = (doc._id | date:'mediumDate'); doc.time = (doc._id | date:'shortTime')">
             <td class="entry-count" ng-show="windowWidth <= 800" ng-bind="$index + 1"></td>
             <td ng-bind-template="{{doc.reading | number:1}}"></td>
-            <td>
-                <span class="datetime" ng-bind="doc.date"></span>
-                <span class="datetime" ng-bind="doc.time"></span>
-            </td>
+            <td><span class="datetime" ng-bind="doc.date"></span><span class="datetime" ng-bind="doc.time"></span></td>
             <td ng-bind-template="{{doc.usage | number:1}}"
                 ></td>
             <td ng-bind-html="doc.duration | humanizeDuration"></td>
