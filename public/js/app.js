@@ -983,12 +983,13 @@
 				csv += formatRows($rows.map(grabRow)) + '"';
 				// Data URI
 				var csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
-                $(this)
+                $('#download-link')
                     .attr({
 						'download': filename
                         , 'href': csvData
                         //,'target' : '_blank' //if you want it to open in a new window
-					});
+					}).click();
+					
                 //------------------------------------------------------------
                 // Helper Functions 
                 //------------------------------------------------------------
