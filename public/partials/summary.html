@@ -67,11 +67,6 @@
       <label for="dateFrom">by Date</label>
       <input id="dateFrom" type="text" class="col-6" ng-change="resetLimit()" ng-model="dateFrom" placeholder="From Date (MMM D, YYYY)" datetime-picker="date">
       <input type="text" class="col-6" ng-change="resetLimit()" ng-model="dateTo" placeholder="To Date (MMM D, YYYY)" datetime-picker="date">
-      <button class="button button-sm" ng-click="downloadResultJson()">
-        <span class="glyphicon glyphicon-download-alt"></span>
-        Download Data
-      </button>
-      <a id="download-link" ng-hide="true" href=""></a>
     </div>
     <span class="entries-count" ng-bind-template="{{
       'Showing ' + results.length + ' out of '
